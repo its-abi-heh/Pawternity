@@ -36,8 +36,8 @@ void loadSampleScreen() {
     text(c.name, x + 37, y + 95);
   }
   
-  for (int i = 0; i < racks.size(); i++) {
-    racks.get(i).drawRack();  
+  for (int i = 0; i < samples.size(); i++) {
+    samples.get(i).drawRack();  
   }
   
   // draw machine and Plate

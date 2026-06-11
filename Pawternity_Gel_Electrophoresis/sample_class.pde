@@ -1,12 +1,16 @@
-class Rack {
+class Sample {
   boolean filled;
   float x_pos, y_pos;
   PImage rackImg;
+  String[] dnaSequence;
+  String type;
+  Cat cat;
   
-  Rack(float x, float y) {
+  Sample(float x, float y) {
     this.filled = false;
     this.x_pos = x;
     this.y_pos = y;
+    this.cat = null;
   }
   
   void drawRack() {

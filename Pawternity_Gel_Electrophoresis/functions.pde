@@ -1,5 +1,15 @@
-void getSample() {
-  
+void loadTestSamples() {
+  for (int j = 0; j < samples.size() ; j ++) {
+    String[] dnaData = cats.get(j).loadDnaProfile();
+
+    for (int i = 0; i < samples.size() ; i ++) {
+      Sample s = samples.get(i);    
+      
+      s.dnaSequence = dnaData;
+      s.cat = cats.get(j);
+      s.filled = true;        
+    }      
+  }  
 }
 
 void updateInformationBox() {
@@ -37,8 +47,8 @@ void createDropdownLists() {
 
 void loadRacks() {
   for (int i = 0; i < numRacks; i ++) {
-    Rack rack = new Rack(500+i*150, 300);
-    racks.add(rack);
+    Sample sample = new Sample(500+i*150, 300);
+    samples.add(sample);
   } 
 }
 
@@ -102,7 +112,27 @@ void mousePressed() {
     }
   }
   
-  print(mouseX, mouseY);
+  for (int i = 0; i < samples.size(); i++) {
+    Sample s = samples.get(i);
+    
+    // check if mouse coordinates fall inside this specific rack's 175x300 box
+    if (mouseX >= s.x_pos && mouseX <= s.x_pos + 175 &&
+        mouseY >= s.y_pos && mouseY <= s.y_pos + 300) {
+      
+      if (s.filled) {
+        
+        trash.play();
+        
+        s.filled = false;
+        s.cat = null;          
+        s.dnaSequence = null;
+        println("Rack " + i + " set back to unfilled.");
+        break;
+      }
+    }
+  }
+  
+  print("\n",mouseX, mouseY);
 }
 
 void mouseReleased() {

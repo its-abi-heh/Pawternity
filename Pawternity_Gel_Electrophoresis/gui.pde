@@ -15,7 +15,26 @@
  */
 
 public void takeSample(GButton source, GEvent event) { //_CODE_:sampleButton:691472:
-  println("sampleButton - GButton >> GEvent." + event + " @ " + millis());
+  //if (placedCat != null) {    
+  //  String[] dnaData = placedCat.loadDnaProfile();
+
+  //  for (int i = 0; i < samples.size() ; i ++) {
+  //    Sample s = samples.get(i);    
+  //    if (s.filled == false) {
+        
+  //      s.dnaSequence = dnaData;
+  //      s.cat = placedCat;
+  //      s.filled = true;
+        
+  //      break;
+  //    }
+  //  }
+      
+  //  placedCat = null;
+  //}
+  
+  loadTestSamples();
+  
 } //_CODE_:sampleButton:691472:
 
 public void caseSelected(GDropList source, GEvent event) { //_CODE_:caseDropdown:955074:
@@ -32,6 +51,10 @@ public void showCaseInfo(GButton source, GEvent event) { //_CODE_:caseButton:275
 public void enzymeSelected(GDropList source, GEvent event) { //_CODE_:enzymeDropdown:210050:
   println("dropList1 - GDropList >> GEvent." + event + " @ " + millis());
 } //_CODE_:enzymeDropdown:210050:
+
+public void removeSample(GButton source, GEvent event) { //_CODE_:retakeButton:320982:
+  placedCat = null;
+} //_CODE_:retakeButton:320982:
 
 synchronized public void win_draw1(PApplet appc, GWinData data) { //_CODE_:window1:528241:
   appc.background(230);
@@ -73,6 +96,10 @@ public void createGUI(){
   enzymeDropdown.setItems(loadStrings("list_210050"), 0);
   enzymeDropdown.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   enzymeDropdown.addEventHandler(this, "enzymeSelected");
+  retakeButton = new GButton(this, 343, 550, 112, 39);
+  retakeButton.setText("Retake Sample");
+  retakeButton.setLocalColorScheme(GCScheme.RED_SCHEME);
+  retakeButton.addEventHandler(this, "removeSample");
   window1 = GWindow.getWindow(this, "Window title", 0, 0, 350, 800, JAVA2D);
   window1.noLoop();
   window1.setActionOnClose(G4P.KEEP_OPEN);
@@ -95,6 +122,7 @@ GDropList caseDropdown;
 GButton caseButton; 
 GLabel label2; 
 GDropList enzymeDropdown; 
+GButton retakeButton; 
 GWindow window1;
 GTextArea infoBox; 
 GLabel label3; 

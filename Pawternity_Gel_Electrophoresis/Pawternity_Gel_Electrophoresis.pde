@@ -1,20 +1,24 @@
 import g4p_controls.*;
+import processing.sound.*;
 
 String enzyme;
 String[] options;
+//Object[][] samples = new String[0][0]; // need object so I can store a string, then an array
 
 int screen = 0;
 int numRacks = 3;
 
 ArrayList<Cat> cats;
 ArrayList<Kitten> kittens;
-ArrayList<Rack> racks;
+ArrayList<Sample> samples;
 
 PImage plate, machine, machine1, machine2, holder1, holder2, holder3;
 
 boolean sampleTaken;
 
 float dragX, dragY; 
+
+SoundFile trash;
 
 Cat draggedCat = null;
 Cat placedCat = null;
@@ -30,8 +34,11 @@ void setup() {
   
   cats = new ArrayList<Cat>();
   kittens = new ArrayList<Kitten>();
-  racks = new ArrayList<Rack>();
+  samples = new ArrayList<Sample>();
   
+  trash = new SoundFile(this, "data/trash.mp3");
+
+
   loadCats();
   loadKittens();
   loadRacks();
@@ -45,14 +52,15 @@ void setup() {
 void draw() {
   if (screen == 0) {
     background(100, 200, 255);
-    
-    sampleButton.setVisible(true);
-    label1.setVisible(true);
-    label2.setVisible(true);
-    caseDropdown.setVisible(true);
-    caseButton.setVisible(true);
-    enzymeDropdown.setVisible(true);
+    //loadTestSamples();
 
+    if (placedCat == null) {
+      retakeButton.setVisible(false);
+    }
+    else {
+     retakeButton.setVisible(true);
+    }
+    
     if (sampleTaken) {
       machine = machine1; 
     }
