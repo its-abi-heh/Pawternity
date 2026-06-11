@@ -1,0 +1,11 @@
+Mochi,mochi.png,cat
+green,orange,short,stripes
+
+Noodle,noodle.png,cat
+blue,black,long,none
+
+Pebble,pebble.png,cat
+blue,white,short,stripes
+
+Biscuit,biscuit.png,cat
+green,brown,short,none
