@@ -1,12 +1,13 @@
 import g4p_controls.*;
 import processing.sound.*;
 
-String enzyme;
 String[] options;
-//Object[][] samples = new String[0][0]; // need object so I can store a string, then an array
+String[] enzymeOptions = {"EcoRI", "BamHI", "HindIII"};
 
-int screen = 0;
+int screen = 2;    // home (0)  samples (1)    enzymes (2)
 int numRacks = 3;
+int animationStartTime;
+int animationStep;
 
 ArrayList<Cat> cats;
 ArrayList<Kitten> kittens;
@@ -20,6 +21,8 @@ float dragX, dragY;
 
 SoundFile trash;
 
+Enzyme enzyme; 
+
 Cat draggedCat = null;
 Cat placedCat = null;
 Kitten caseKitten;
@@ -27,7 +30,7 @@ Kitten caseKitten;
 void setup() {
   size(1000, 800);
   background(100, 200, 255);
-  
+
   plate = loadImage("plate.png");
   machine1 = loadImage("machine_1.png");
   machine2 = loadImage("machine_2.png");
@@ -38,28 +41,41 @@ void setup() {
   
   trash = new SoundFile(this, "data/trash.mp3");
 
-
   loadCats();
   loadKittens();
   loadRacks();
-  
-  surface.setLocation(350, 0); // use setLocation to ensure windows don't overlap
-  
+    
   createGUI();
   createDropdownLists();
+  
+  surface.setLocation(350, 0); // use setLocation to ensure windows don't overlap  
+  sampleButton.setVisible(false);
+  sampleButton.setVisible(false);
+  label1.setVisible(false);
+  label2.setVisible(false);
+  caseDropdown.setVisible(false);
+  caseButton.setVisible(false);
+  enzymeDropdown.setVisible(false);
+  
+  animationStartTime = millis();
+  animationStep = 1;
+
 }
 
 void draw() {
-  if (screen == 0) {
+  
+  background(100, 200, 255);
+  
+  if (placedCat == null) {
+    retakeButton.setVisible(false);
+  }
+  else {
+   retakeButton.setVisible(true);
+  }
+  
+  if (screen == 1) {
+    
     background(100, 200, 255);
-    //loadTestSamples();
-
-    if (placedCat == null) {
-      retakeButton.setVisible(false);
-    }
-    else {
-     retakeButton.setVisible(true);
-    }
     
     if (sampleTaken) {
       machine = machine1; 
@@ -70,7 +86,13 @@ void draw() {
     
     loadSampleScreen(); 
   }
-  else {
-    sampleButton.setVisible(false);
+  else if (screen == 2) {
+
+    loadTestSamples();
+    drawEnzymeVisualization();
+
   }
+  
+  //noLoop();
+  
 }

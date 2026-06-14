@@ -16,13 +16,15 @@
 
 public void takeSample(GButton source, GEvent event) { //_CODE_:sampleButton:691472:
   //if (placedCat != null) {    
-  //  String[] dnaData = placedCat.loadDnaProfile();
+  //  String dnaData = placedCat.loadDnaProfile();
 
   //  for (int i = 0; i < samples.size() ; i ++) {
   //    Sample s = samples.get(i);    
   //    if (s.filled == false) {
         
   //      s.dnaSequence = dnaData;
+  //      s.cutSites = enzyme.findCutSites(s.dnaSequence);
+
   //      s.cat = placedCat;
   //      s.filled = true;
         
@@ -49,7 +51,18 @@ public void showCaseInfo(GButton source, GEvent event) { //_CODE_:caseButton:275
 } //_CODE_:caseButton:275004:
 
 public void enzymeSelected(GDropList source, GEvent event) { //_CODE_:enzymeDropdown:210050:
-  println("dropList1 - GDropList >> GEvent." + event + " @ " + millis());
+  String selectedEnzyme = enzymeDropdown.getSelectedText();
+  
+  println(selectedEnzyme);
+  if (selectedEnzyme.equals("EcoRI")) {
+    enzyme = new Enzyme("EcoRI", "GAATTC");
+  }
+  else if (selectedEnzyme.equals("BamHI")) {
+    enzyme = new Enzyme("BamHI", "GGATCC");
+  }
+  else {
+    enzyme = new Enzyme("HindIII", "AAGCTT");    
+  }
 } //_CODE_:enzymeDropdown:210050:
 
 public void removeSample(GButton source, GEvent event) { //_CODE_:retakeButton:320982:

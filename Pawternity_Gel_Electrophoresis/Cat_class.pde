@@ -9,7 +9,7 @@ class Cat {
  this.traits = t;
  }
  
-  String[] loadDnaProfile() {
+  String loadDnaProfile() {
     String[] lines = loadStrings("data/catSamples.txt");
     
     for (int i = 0; i < lines.length; i++) {
@@ -17,7 +17,7 @@ class Cat {
       if (lines[i].equals(name)) {
 
         // split DNA sequence into separate bases
-        String[] dnaData = lines[i + 1].split("");
+        String dnaData = lines[i + 1];
         return dnaData;
       }
     }

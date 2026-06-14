@@ -7,6 +7,14 @@ void loadSampleScreen() {
   int boxWidth = cols * iconSize + (cols + 1) * spacing;
   int boxHeight = rows * (iconSize + 40) + (rows + 1) * spacing;
   
+  sampleButton.setVisible(true);
+  sampleButton.setVisible(true);
+  label1.setVisible(true);
+  label2.setVisible(true);
+  caseDropdown.setVisible(true);
+  caseButton.setVisible(true);
+  enzymeDropdown.setVisible(true);
+  
   // background panels
   fill(220); 
   noStroke();

@@ -1,15 +1,87 @@
 void loadTestSamples() {
-  for (int j = 0; j < samples.size() ; j ++) {
-    String[] dnaData = cats.get(j).loadDnaProfile();
 
-    for (int i = 0; i < samples.size() ; i ++) {
-      Sample s = samples.get(i);    
-      
-      s.dnaSequence = dnaData;
-      s.cat = cats.get(j);
-      s.filled = true;        
-    }      
-  }  
+  enzyme = new Enzyme("EcoRI", "GAATTC");
+
+  for (int i = 0; i < samples.size(); i++) {
+
+    Sample s = samples.get(i);
+
+    s.dnaSequence = cats.get(i).loadDnaProfile();
+
+    s.cutSites = enzyme.findCutSites(s.dnaSequence);
+    s.fragments = enzyme.digest(s.dnaSequence);
+
+    s.cat = cats.get(i);
+    s.filled = true;
+  }
+}
+
+void drawEnzymeVisualization() {
+  float startX = 50;
+  float startY = 100;
+
+  animationStep =(millis() - animationStartTime) / 5000 + 1;
+  
+  if (animationStep > 5) {
+    animationStep = 5;
+  }
+  
+  fill(255);
+  
+  textAlign(CENTER);
+  
+  textSize(30);
+  
+  String stepDescription = "";
+  
+  if (animationStep == 1) {
+    stepDescription =
+      "Step 1: DNA Sample Loaded";
+  }
+  else if (animationStep == 2) {
+    stepDescription =
+      "Step 2: Restriction Enzyme (" +
+      enzyme.name + ") " + "binds at " +enzyme.recognitionSite;
+  }
+  else if (animationStep == 3) {
+    stepDescription =
+      "Step 3: DNA Cut At Recognition Sites";
+  }
+  else if (animationStep == 4) {
+    stepDescription =
+      "Step 4: DNA Fragments Produced";
+  }
+  else {
+    stepDescription =
+      "Step 5: Ready For Gel Electrophoresis";
+  }
+  
+  text(stepDescription, width/2, 40);
+
+  for (int i = 0; i < samples.size(); i++) {
+    Sample s = samples.get(i);
+    float y = startY + i * 175; // Scaled up vertical bounds to make room for 4 lines
+
+    fill(255);
+    textSize(20);
+    textAlign(LEFT);
+    text(s.cat.name, startX, y - 30);
+
+    s.drawDNA(startX, y);
+    
+    if (animationStep >= 3) {
+      s.drawCutSites(startX, y + 40);
+    }
+    
+    if (animationStep >= 4) {
+      s.drawFragments(startX, y + 80);
+    }
+    
+    if (animationStep >= 5) {
+      s.drawFragmentLabels(startX, y + 120);
+    }
+    
+  }
 }
 
 void updateInformationBox() {
@@ -34,15 +106,15 @@ void updateInformationBox() {
 void createDropdownLists() {
   // initialize and fill the options array with kitten names
   options = new String[kittens.size()];
+
   for (int i = 0; i < kittens.size(); i++) {
     options[i] = kittens.get(i).name;
   }
   
   caseDropdown.setItems(options, 0);   // defaults to the 1st kitten (index 0)
-  enzymeDropdown.setItems(options, 1); // make enzymes later
+  enzymeDropdown.setItems(enzymeOptions, 1); // make enzymes later
   
   caseKitten = kittens.get(0);
-  //enzyme = kittens.get(1); 
 }
 
 void loadRacks() {
