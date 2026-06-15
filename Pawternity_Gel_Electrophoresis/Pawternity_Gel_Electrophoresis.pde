@@ -1,10 +1,14 @@
 import g4p_controls.*;
 import processing.sound.*;
-
+final float GEL_WIDTH = 800;
+final float GEL_HEIGHT = 600;
+final float GEL_TOP = 100;
+boolean gelInitialized = false;
+float gelX, gelY;
 String[] options;
 String[] enzymeOptions = {"EcoRI", "BamHI", "HindIII"};
 
-int screen = 2;    // home (0)  samples (1)    enzymes (2)
+int screen = 1;    // home (0)  samples (1)    enzymes (2)
 int numRacks = 3;
 int animationStartTime;
 int animationStep;
@@ -13,7 +17,7 @@ ArrayList<Cat> cats;
 ArrayList<Kitten> kittens;
 ArrayList<Sample> samples;
 
-PImage plate, machine, machine1, machine2, holder1, holder2, holder3;
+PImage plate, machine, holder1, holder2, holder3;
 
 boolean sampleTaken;
 
@@ -32,13 +36,12 @@ void setup() {
   background(100, 200, 255);
 
   plate = loadImage("plate.png");
-  machine1 = loadImage("machine_1.png");
-  machine2 = loadImage("machine_2.png");
+  machine = loadImage("machine_1.png");
   
   cats = new ArrayList<Cat>();
   kittens = new ArrayList<Kitten>();
   samples = new ArrayList<Sample>();
-  
+  enzyme = new Enzyme("EcoRI", "GAATTC");
   trash = new SoundFile(this, "data/trash.mp3");
 
   loadCats();
@@ -57,7 +60,6 @@ void setup() {
   caseButton.setVisible(false);
   enzymeDropdown.setVisible(false);
   
-  animationStartTime = millis();
   animationStep = 1;
 
 }
@@ -74,23 +76,36 @@ void draw() {
   }
   
   if (screen == 1) {
+    sampleButton.setVisible(true);
+    label1.setVisible(true);
+    label2.setVisible(true);
+    caseDropdown.setVisible(true);
+    caseButton.setVisible(true);
+    enzymeDropdown.setVisible(true);
     
     background(100, 200, 255);
-    
-    if (sampleTaken) {
-      machine = machine1; 
-    }
-    else {
-      machine = machine2; 
-    }
     
     loadSampleScreen(); 
   }
   else if (screen == 2) {
+    sampleButton.setVisible(false);
+    label1.setVisible(false);
+    label2.setVisible(false);
+    caseDropdown.setVisible(false);
+    caseButton.setVisible(false);
+    enzymeDropdown.setVisible(false);
+    
+    drawEnzymeScreen();
 
-    loadTestSamples();
-    drawEnzymeVisualization();
-
+  }
+  else if (screen == 3) {
+    gelInitialized = false;
+    
+    //if (samples.size() > 0) {
+    //  loadTestSamples();   // ONLY ONCE PER ENTRY (safe now if guarded)
+    //}
+ 
+    drawGelPad();
   }
   
   //noLoop();

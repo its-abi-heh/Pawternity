@@ -6,9 +6,9 @@ class Sample {
 
   String dnaSequence;
   String type;
-
   ArrayList<Integer> cutSites;
   ArrayList<String> fragments;
+  ArrayList<Integer> bandSizes;
 
   Cat cat;
 
@@ -19,12 +19,21 @@ class Sample {
     cat = null;
     cutSites = new ArrayList<Integer>();
     fragments = new ArrayList<String>();
+    bandSizes = new ArrayList<Integer>();
+
   }
 
   void drawRack() {
-    rackImg = loadImage(filled ? "holder_2.png" : "holder_1.png");
-    image(rackImg, x_pos, y_pos, 175, 300);
+    if (this.filled == false) {
+      rackImg = loadImage("holder_1.png"); 
+    }
+    else {
+      rackImg = loadImage("holder_2.png");      
+    }
+    
+    image(rackImg, this.x_pos, this.y_pos, 175, 250);     
   }
+
 
   // LINE 1: Full raw DNA sequence string (unbroken)
   void drawDNA(float x, float y) {
@@ -43,7 +52,7 @@ class Sample {
     noStroke();
 
     float currentX = x;
-    float cutGapping = 40.0; // Dynamic space added right inside the cut zone!
+    float cutGapping = 40; // Dynamic space added right inside the cut zone!
 
     for (int i = 0; i < dnaSequence.length(); i++) {
       // Check if a restriction cut happens BEFORE drawing this character
@@ -52,7 +61,7 @@ class Sample {
         // Draw the red vertical line centered right in the middle of our new extra space gap
         stroke(255, 0, 0);
         strokeWeight(3);
-        float lineX = currentX + (cutGapping / 2.0);
+        float lineX = currentX + (cutGapping / 2);
         line(lineX, y - 15, lineX, y + 5);
         noStroke(); // Turn off strokes to draw text again
         
@@ -122,7 +131,7 @@ class Sample {
     noStroke();
 
     float currentX = x;
-    float fragmentSpacing = 50.0; // MUST match Line 3 spacing exactly!
+    float fragmentSpacing = 50; // MUST match Line 3 spacing exactly!
 
     for (int i = 0; i < fragments.size(); i++) {
       String frag = fragments.get(i);
@@ -131,5 +140,10 @@ class Sample {
       text(label, currentX, y);
       currentX += textWidth(frag) + fragmentSpacing; // Moves down using sequence width
     }
+  }
+    
+  void generateBands(Enzyme enzyme) {
+  
+    bandSizes = enzyme.getFragments(dnaSequence);
   }
 }
