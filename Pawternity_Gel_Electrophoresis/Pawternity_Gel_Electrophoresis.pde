@@ -1,14 +1,15 @@
 import g4p_controls.*;
 import processing.sound.*;
-final float GEL_WIDTH = 800;
-final float GEL_HEIGHT = 600;
-final float GEL_TOP = 100;
+
+float GEL_WIDTH = 800;
+float GEL_HEIGHT = 600;
+float GEL_TOP = 100;
 boolean gelInitialized = false;
 float gelX, gelY;
 String[] options;
 String[] enzymeOptions = {"EcoRI", "BamHI", "HindIII"};
 
-int screen = 1;    // home (0)  samples (1)    enzymes (2)
+int screen = 3;    // home (0)  samples (1)    enzymes (2)
 int numRacks = 3;
 int animationStartTime;
 int animationStep;
@@ -29,6 +30,8 @@ Enzyme enzyme;
 
 Cat draggedCat = null;
 Cat placedCat = null;
+Cat selectedCat = null;
+
 Kitten caseKitten;
 
 void setup() {
@@ -87,25 +90,41 @@ void draw() {
     
     loadSampleScreen(); 
   }
-  else if (screen == 2) {
+  else {
     sampleButton.setVisible(false);
     label1.setVisible(false);
     label2.setVisible(false);
     caseDropdown.setVisible(false);
     caseButton.setVisible(false);
     enzymeDropdown.setVisible(false);
+
+  }
+  if (screen == 2) {
     
     drawEnzymeScreen();
 
   }
-  else if (screen == 3) {
+  if (screen == 3) {
+    
+    sample1Box.setVisible(true);
+    sample2Box.setVisible(true);
+    sample3Box.setVisible(true);
+   
     gelInitialized = false;
     
-    //if (samples.size() > 0) {
-    //  loadTestSamples();   // ONLY ONCE PER ENTRY (safe now if guarded)
-    //}
- 
+    if (samples.size() > 0) {
+      loadTestSamples();   // ONLY ONCE PER ENTRY (safe now if guarded)
+    }
+    
+    sample1Box.setText(samples.get(0).cat.name);
+    sample2Box.setText(samples.get(1).cat.name);
+    sample3Box.setText(samples.get(2).cat.name);
     drawGelPad();
+  }
+  else {
+    sample1Box.setVisible(false);
+    sample2Box.setVisible(false);
+    sample3Box.setVisible(false); 
   }
   
   //noLoop();

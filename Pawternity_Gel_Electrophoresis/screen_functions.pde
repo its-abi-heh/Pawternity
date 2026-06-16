@@ -126,6 +126,12 @@ void drawGelPad() {
   for (int i = 0; i < samples.size() && i < 3; i++) {
     drawSampleBands(samples.get(i), sampleLaneX[i], usableTop, usableBottom - usableTop);
   }
+  
+  fill(100, 200, 255);
+  rect(0, 500, 1000, 800);
+  fill(0);
+  textSize(20);
+  text("Who is " + caseKitten.name + "'s father?", 250, 550);
 }
 void drawEnzymeScreen() {
 

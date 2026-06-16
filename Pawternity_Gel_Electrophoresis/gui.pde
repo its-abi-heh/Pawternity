@@ -86,6 +86,24 @@ public void removeSample(GButton source, GEvent event) { //_CODE_:retakeButton:3
   placedCat = null;
 } //_CODE_:retakeButton:320982:
 
+public void sample1Selected(GCheckbox source, GEvent event) { //_CODE_:sample1Box:299050:
+  if (!sample2Box.isSelected() && !sample3Box.isSelected()) {
+    selectedCat = samples.get(0).cat;
+  }
+} //_CODE_:sample1Box:299050:
+
+public void sample3Selected(GCheckbox source, GEvent event) { //_CODE_:sample3Box:662928:
+  if (!sample2Box.isSelected() && !sample1Box.isSelected()) {
+    selectedCat = samples.get(1).cat;
+  }
+} //_CODE_:sample3Box:662928:
+
+public void sample2Selected(GCheckbox source, GEvent event) { //_CODE_:sample2Box:342753:
+  if (!sample1Box.isSelected() && !sample3Box.isSelected()) {
+    selectedCat = samples.get(2).cat;
+  }
+} //_CODE_:sample2Box:342753:
+
 synchronized public void win_draw1(PApplet appc, GWinData data) { //_CODE_:window1:528241:
   appc.background(230);
 } //_CODE_:window1:528241:
@@ -180,6 +198,21 @@ public void createGUI(){
   retakeButton.setText("Retake Sample");
   retakeButton.setLocalColorScheme(GCScheme.RED_SCHEME);
   retakeButton.addEventHandler(this, "removeSample");
+  sample1Box = new GCheckbox(this, 360, 540, 150, 20);
+  sample1Box.setIconAlign(GAlign.LEFT, GAlign.MIDDLE);
+  sample1Box.setText("checkbox text");
+  sample1Box.setOpaque(false);
+  sample1Box.addEventHandler(this, "sample1Selected");
+  sample3Box = new GCheckbox(this, 360, 575, 150, 20);
+  sample3Box.setIconAlign(GAlign.LEFT, GAlign.MIDDLE);
+  sample3Box.setText("checkbox text");
+  sample3Box.setOpaque(false);
+  sample3Box.addEventHandler(this, "sample3Selected");
+  sample2Box = new GCheckbox(this, 540, 540, 150, 20);
+  sample2Box.setIconAlign(GAlign.LEFT, GAlign.MIDDLE);
+  sample2Box.setText("checkbox text");
+  sample2Box.setOpaque(false);
+  sample2Box.addEventHandler(this, "sample2Selected");
   window1 = GWindow.getWindow(this, "Window title", 0, 0, 350, 800, JAVA2D);
   window1.noLoop();
   window1.setActionOnClose(G4P.KEEP_OPEN);
@@ -230,6 +263,9 @@ GButton caseButton;
 GLabel label2; 
 GDropList enzymeDropdown; 
 GButton retakeButton; 
+GCheckbox sample1Box; 
+GCheckbox sample3Box; 
+GCheckbox sample2Box; 
 GWindow window1;
 GTextArea infoBox; 
 GLabel label3; 
