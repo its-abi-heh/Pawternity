@@ -24,12 +24,12 @@ public void takeSample(GButton source, GEvent event) { //_CODE_:sampleButton:691
           
           s.dnaSequence = dnaData;
           
-          // FIX: Calculate and save the enzyme cuts and fragments into the sample object!
+          // calculate and save the enzyme cuts and fragments into the sample object
           if (enzyme == null) {
-            enzyme = new Enzyme("EcoRI", "GAATTC"); // Emergency fallback initialization
+            enzyme = new Enzyme("EcoRI", "GAATTC"); // initialize the enzyme
           }
           s.cutSites = enzyme.findCutSites(s.dnaSequence);
-          s.fragments = enzyme.digest(s.dnaSequence); // This stops the NullPointerException on Line 4!
+          s.fragments = enzyme.digest(s.dnaSequence);
           s.generateBands(enzyme);
 
           s.cat = placedCat;
@@ -52,6 +52,7 @@ public void showCaseInfo(GButton source, GEvent event) { //_CODE_:caseButton:275
   int selectedIndex = caseDropdown.getSelectedIndex();
  
   caseKitten = kittens.get(selectedIndex);
+  infoCat = null;
   updateInformationBox();
 } //_CODE_:caseButton:275004:
 
@@ -68,7 +69,7 @@ public void enzymeSelected(GDropList source, GEvent event) { //_CODE_:enzymeDrop
     enzyme = new Enzyme("HindIII", "AAGCTT");    
   }
 
-  // FIX: Force all currently held tubes to instantly recalculate with the new enzyme choice
+  // Force all currently held tubes to instantly recalculate with the new enzyme choice
   for (int i = 0; i < samples.size(); i++) {
     Sample s = samples.get(i);
     if (s.filled && s.dnaSequence != null) {
@@ -86,65 +87,112 @@ public void removeSample(GButton source, GEvent event) { //_CODE_:retakeButton:3
 public void sample1Selected(GCheckbox source, GEvent event) { //_CODE_:sample1Box:299050:
   if (!sample2Box.isSelected() && !sample3Box.isSelected()) {
     selectedCat = samples.get(0).cat;
+    result = "";
+  }
+  else {
+   selectedCat = null; 
   }
 } //_CODE_:sample1Box:299050:
 
 public void sample3Selected(GCheckbox source, GEvent event) { //_CODE_:sample3Box:662928:
   if (!sample2Box.isSelected() && !sample1Box.isSelected()) {
-    selectedCat = samples.get(1).cat;
+    selectedCat = samples.get(2).cat;
+    result = "";
+  }
+  else {
+   selectedCat = null; 
   }
 } //_CODE_:sample3Box:662928:
 
 public void sample2Selected(GCheckbox source, GEvent event) { //_CODE_:sample2Box:342753:
   if (!sample1Box.isSelected() && !sample3Box.isSelected()) {
-    selectedCat = samples.get(2).cat;
+    selectedCat = samples.get(1).cat;
+    result = "";
+  }
+  else {
+   selectedCat = null; 
   }
 } //_CODE_:sample2Box:342753:
 
 public void checkFather(GButton source, GEvent event) { //_CODE_:checkButton:409539:
-  if (caseKitten == null || enzyme == null)
-    return;
 
-  String kittenDNA =
-      caseKitten.loadDnaProfile();
-
-  ArrayList<Integer> kittenBands =
-      enzyme.getFragments(kittenDNA);
-
-  Cat bestCat = null;
+  String kittenDNA = caseKitten.loadDnaProfile();
+  ArrayList<Integer> kittenBands = enzyme.getFragments(kittenDNA);
   float bestPercent = -1;
-
+  float userSelectedPercent = 0;
+  int filledSampleCount = 0;
+  
+  if (caseKitten == null || enzyme == null || selectedCat == null) {
+    return;
+  }
+  
+  // Find the absolute maximum matching percentage present in the racks
   for (int i = 0; i < samples.size(); i++) {
-
     Sample s = samples.get(i);
 
-    if (!s.filled || s.cat == null)
+    int matches = countMatchingBands(kittenBands, s.bandSizes);
+    float percent = 0.0f;
+
+    if (!s.filled || s.cat == null) {
       continue;
+    }
+    
+    filledSampleCount++;
 
-    float percent =
-      calculateMatchPercent(
-        kittenBands,
-        s.bandSizes);
+    if (kittenBands.size() > 0) {
+      percent = 100.0f * (float)matches / (float)kittenBands.size();
+    }
 
-    println(
-      s.cat.name +
-      " match = " +
-      nf(percent, 0, 1) +
-      "%"
-    );
+    if (s.cat.name.equals(selectedCat.name)) {
+      userSelectedPercent = percent;
+    }
 
     if (percent > bestPercent) {
       bestPercent = percent;
-      bestCat = s.cat;
     }
   }
 
-  if (bestCat != null) {
-    // for now just print
-    println();
-    println("Most likely father:");
-    println(bestCat.name);
-    println("Match score: " + nf(bestPercent,0,1)+ "%");
+  // count how many cats actually share that maximum percentage
+  int topMatchCount = 0;
+  Cat bestCat = null;
+
+  for (int i = 0; i < samples.size(); i++) {
+    Sample s = samples.get(i);
+    if (!s.filled || s.cat == null) continue;
+
+    int matches = countMatchingBands(kittenBands, s.bandSizes);
+    float percent = 0.0f;
+    if (kittenBands.size() > 0) {
+      percent = 100.0f * (float)matches / (float)kittenBands.size();
+    }
+
+    if (abs(percent - bestPercent) < 0.01f && bestPercent > 0) {
+      topMatchCount++;
+      bestCat = s.cat; // will temporarily hold a top match candidate
+    }
+  }
+
+  // compute explicit messaging parameters based on clean counts
+  
+  // no matches
+  if (bestPercent <= 0) {
+    result = "None of the tested cats share any DNA bands with " + caseKitten.name + " (0% matches). The true father isn't here!";
+  }
+  // all cats have same number of matching bands
+  else if (topMatchCount == filledSampleCount && abs(userSelectedPercent - bestPercent) < 0.01f) {
+    result = "All suspects share the exact same number of matching bands (" + nf(userSelectedPercent, 0, 1) + "%). The test is completely inconclusive!";
+  }
+  // a partial tie exists (e.g., 2 out of 3 match evenly at the top)
+  else if (topMatchCount > 1 && abs(userSelectedPercent - bestPercent) < 0.01f) {
+    result = "It's a tie! " + selectedCat.name + " matches at " + nf(userSelectedPercent, 0, 1) + "%. Can you identify the other tied candidate?";
+  } 
+  // the user successfully guessed the single, undisputed highest match
+  else if (topMatchCount == 1 && bestCat != null && bestCat.name.equals(selectedCat.name)) {
+    result = "That is correct! " + bestCat.name + " is a " + nf(userSelectedPercent, 0, 1) + "% match for " + caseKitten.name + "'s DNA sample.";
+  } 
+  // the user guessed incorrectly
+  else {
+    result = "Based on the data, " + selectedCat.name + " is a " + nf(userSelectedPercent, 0, 1) + "% match and most likely isn't the father. Guess again!";
   }
 } //_CODE_:checkButton:409539:
 
@@ -157,7 +205,7 @@ public void infoChanged(GTextArea source, GEvent event) { //_CODE_:infoBox:75554
 } //_CODE_:infoBox:755543:
 
 public void goHome(GButton source, GEvent event) { //_CODE_:homeButton:825313:
-  println("homeButton - GButton >> GEvent." + event + " @ " + millis());
+  screen = 0;
 } //_CODE_:homeButton:825313:
 
 public void goSampleScreen(GButton source, GEvent event) { //_CODE_:collectButton:715923:
@@ -184,7 +232,7 @@ public void goVisualize(GButton source, GEvent event) { //_CODE_:visualizeButton
 } //_CODE_:visualizeButton:568749:
 
 public void goEvaluate(GButton source, GEvent event) { //_CODE_:evaluateCaseButton:379020:
-  boolean allSamplesFilled = true; // Start by assuming everything is perfect
+  boolean allSamplesFilled = true;
     
     for (int i = 0; i < samples.size(); i++) {
       Sample s = samples.get(i);    

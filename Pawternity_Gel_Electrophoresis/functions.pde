@@ -1,16 +1,21 @@
-int countMatchingBands(ArrayList<Integer> kittenBands,
-                       ArrayList<Integer> fatherBands) {
-
+int countMatchingBands(ArrayList<Integer> kittenBands, ArrayList<Integer> fatherBands) {
   int matches = 0;
+  
+  // track which matched bands
+  boolean[] fatherBandUsed = new boolean[fatherBands.size()];
 
   for (int kb : kittenBands) {
+    for (int i = 0; i < fatherBands.size(); i++) {
+      int fb = fatherBands.get(i);
 
-    for (int fb : fatherBands) {
-
-      // allow slight gel measurement error
+      // skip this band if it was already paired with a previous kitten band
+      if (fatherBandUsed[i]) continue; 
+      
+      // Allow slight gel measurement error
       if (abs(kb - fb) <= 2) {
         matches++;
-        break;
+        fatherBandUsed[i] = true; // Mark it as used!
+        break; // Move to the next kitten band safely
       }
     }
   }
@@ -19,50 +24,40 @@ int countMatchingBands(ArrayList<Integer> kittenBands,
 }
 
 Cat findLikelyFather() {
-
-  if (caseKitten == null || enzyme == null) return null;
-
   String kittenDNA = caseKitten.loadDnaProfile();
-
-  ArrayList<Integer> kittenBands =
-      enzyme.getFragments(kittenDNA);
-
-  Cat bestCat = null;
+  ArrayList<Integer> kittenBands = enzyme.getFragments(kittenDNA);
   int bestScore = -1;
+  Cat bestCat = null;
+  
+  if (caseKitten == null || enzyme == null) {
+    return null; 
+  }
 
   for (int i = 0; i < samples.size(); i++) {
-
     Sample s = samples.get(i);
 
     if (!s.filled || s.cat == null) continue;
 
-    int score =
-      countMatchingBands(kittenBands, s.bandSizes);
+    int score = countMatchingBands(kittenBands, s.bandSizes);
 
     if (score > bestScore) {
       bestScore = score;
       bestCat = s.cat;
     }
   }
-
   return bestCat;
 }
 
-float calculateMatchPercent(
-    ArrayList<Integer> kittenBands,
-    ArrayList<Integer> fatherBands) {
-
-  int matches = countMatchingBands(
-      kittenBands,
-      fatherBands);
-
-  return 100.0 * matches /
-         kittenBands.size();
+float calculateMatchPercent(ArrayList<Integer> kittenBands, ArrayList<Integer> fatherBands) {
+  int matches = countMatchingBands(kittenBands, fatherBands);
+  
+  if (kittenBands.isEmpty()) {
+    return 0.0f;
+  }
+  return 100.0f * float(matches) / float(kittenBands.size());
 }
 
-int traitMatches(String[] kittenTraits,
-                 String[] fatherTraits) {
-
+int traitMatches(String[] kittenTraits, String[] fatherTraits) {
   int matches = 0;
 
   for (int i = 0; i < kittenTraits.length; i++) {
@@ -73,48 +68,36 @@ int traitMatches(String[] kittenTraits,
       matches++;
     }
   }
-
   return matches;
 }
 
-void loadTestSamples() {
-
-  if (gelInitialized) return;
- 
-  enzyme = new Enzyme("EcoRI", "GAATTC");
-
-  for (int i = 0; i < samples.size(); i++) {
-
-    Sample s = samples.get(i);
-
-    s.dnaSequence = cats.get(i).loadDnaProfile();
-
-    s.cutSites = enzyme.findCutSites(s.dnaSequence);
-    s.fragments = enzyme.digest(s.dnaSequence);
-    s.generateBands(enzyme);
-
-    s.cat = cats.get(i);
-    s.filled = true;
-  }
-
-  gelInitialized = true;
-}
 void updateInformationBox() {
-  String info;
+  String info = "";
+  String[] traits = null;
+  String name = "";
 
-  if (caseKitten != null) {
-    String stringTraits = join(caseKitten.traits, ", ");
-
-    info = "NAME: " + caseKitten.name + "\n";
-    info += "TRAITS: " + stringTraits;
+  if (infoCat != null) {
+    name = infoCat.name;
+    traits = infoCat.traits;
+  } 
+  else if (caseKitten != null) {
+    name = caseKitten.name;
+    traits = caseKitten.traits;
   }
+
+  // generate following structure if traits data was successfully retrieved
+  if (traits != null && traits.length >= 4) {
+    info = "NAME: " + name + "\n";
+    info += "TRAITS:\n";
+    info += "Eye color: " + traits[0] + "\n";
+    info += "Fur color: " + traits[1] + "\n";
+    info += "Fur length: " + traits[2] + "\n";
+    info += "Fur pattern: " + traits[3];
+  } 
   else {
-   info = "nothing to see here."; 
-    
+    info = "Select a cat or case to view profile.";
   }
-  
- infoBox.setText(info);
- 
+  infoBox.setText(info);
 }
 
 // populate G4P dropdown lists
@@ -126,9 +109,10 @@ void createDropdownLists() {
     options[i] = kittens.get(i).name;
   }
   
-  caseDropdown.setItems(options, 0);   // defaults to the 1st kitten (index 0)
-  enzymeDropdown.setItems(enzymeOptions, 1); // make enzymes later
+  caseDropdown.setItems(options, 0);
+  enzymeDropdown.setItems(enzymeOptions, 0);
   
+  // set default case kitten to avoid null pointer exception
   caseKitten = kittens.get(0);
 }
 
@@ -140,35 +124,40 @@ void loadRacks() {
 }
 
 void loadCats() {
-
-  // get father cat info and traits from data file
   String[] lines = loadStrings("data/cats.txt");
 
+  if (lines == null) {
+    return;
+  }
+
   for (int i = 0; i < lines.length; i += 3) {
+    if (i + 1 >= lines.length) break; // Safety check
+    
     String[] info = split(lines[i], ',');
     String[] traits = split(lines[i + 1], ',');
 
-    //Cat cat = new Cat(info[0], info[1], traits);
     Cat cat = new Cat(info[0], info[1], traits);
-
     cats.add(cat);
   }
 }
 
 void loadKittens() {
-
-  // get kitten data from text file
   String[] lines = loadStrings("data/kittens.txt");
-
+  
+  if (lines == null) {
+    return;
+  }
+  
   for (int i = 0; i < lines.length; i += 3) {
+    if (i + 1 >= lines.length) break; // Safety check
+    
     String[] info = split(lines[i], ',');
     String[] traits = split(lines[i + 1], ',');
 
-    Kitten kitten = new Kitten(info[0], "mittens.png", traits);
+    Kitten kitten = new Kitten(info[0], info[1], traits);
     kittens.add(kitten);
   }
 }
-
 
 void mouseDragged() {
   // if dragging a cat, update its position to match the mouse
@@ -177,42 +166,39 @@ void mouseDragged() {
     dragY = mouseY;
   }
 }
+
 void mousePressed() {
   int iconSize = 75; 
+  int spacing = 15;
   
-  int cols = Math.min(cats.size(), 6);
-  
-  if (screen == 1) {
-    if (cols < 1) cols = 1;
-    
-    int spacing = 15;
-  
+  if (screen == 1) {  
     for (int i = 0; i < cats.size(); i++) {
-      int row = i / cols;
-      int col = i % cols;
+      int row = i / 6;
+      int col = i % 6;
       int x = 10 + spacing + col * (iconSize + spacing);
       int y = 50 + spacing + row * (iconSize + 40 + spacing);
   
-      // check if click hits inside the actual 75x75 cat icon
       if (mouseX >= x && mouseX <= x + iconSize && mouseY >= y && mouseY <= y + iconSize) {
         draggedCat = cats.get(i); 
+        infoCat = cats.get(i); 
+        
+        updateInformationBox();
+        
         dragX = mouseX;
         dragY = mouseY;
+        
         break; 
       }
     }
     
     for (int i = 0; i < samples.size(); i++) {
       Sample s = samples.get(i);
-      
-      // check if mouse coordinates fall inside this specific rack's 175x300 box
       if (mouseX >= s.x_pos && mouseX <= s.x_pos + 175 &&
           mouseY >= s.y_pos && mouseY <= s.y_pos + 300) {
-        
         if (s.filled) {
-          
-          trash.play();
-          
+          if (trash != null) {
+            trash.play();
+          }
           s.filled = false;
           s.cat = null;          
           s.dnaSequence = null;

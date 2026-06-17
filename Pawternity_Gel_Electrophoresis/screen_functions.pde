@@ -1,26 +1,40 @@
+void drawHomeScreen() {
+  println(0);
+  imageMode(CENTER);
+  image(logo, 500, 325);
+  
+}
+
 void drawKittenBands(float laneX, float gelY, float gelHeight) {
 
-  if (caseKitten == null || enzyme == null) return;
-
+  if (caseKitten == null || enzyme == null) {
+    return;
+  }
+  
   String dna = caseKitten.loadDnaProfile();
-  if (dna == null) return;
-
+  if (dna == null) {
+    return;
+  }
+  
   ArrayList<Integer> bands = enzyme.getFragments(dna);
-  if (bands == null || bands.size() == 0) return;
-
+  if (bands == null || bands.size() == 0) {
+    return;
+  }
+  
   float maxBP = 0;
   for (int b : bands) {
     if (b > maxBP) maxBP = b;
   }
 
-  if (maxBP <= 0) return;
-
+  if (maxBP <= 0) {
+    return;
+  }
   fill(10, 20, 80);
   noStroke();
 
   for (int size : bands) {
 
-    float y = map(size, 0, maxBP, gelY + gelHeight - 10, gelY + 10);
+    float y = map(size, 0, maxBP, 65 + 400 - 10, 65 + 10);
 
     rect(laneX - 18, y - 2, 36, 5);
   }
@@ -28,62 +42,51 @@ void drawKittenBands(float laneX, float gelY, float gelHeight) {
 
 void drawSampleBands(Sample s, float laneX, float gelY, float gelHeight) {
 
-  if (s == null || s.cat == null || s.bandSizes == null) return;
-  if (s.bandSizes.size() == 0) return;
-
+  if (s == null || s.cat == null || s.bandSizes == null) {
+    return;
+  }
+  if (s.bandSizes.size() == 0) {
+    return;
+  }
   float maxBP = 0;
 
   for (int b : s.bandSizes) {
     if (b > maxBP) maxBP = b;
   }
 
-  if (maxBP <= 0) return;
-
+  if (maxBP <= 0) {
+    return;
+  }
+  
   fill(10, 20, 80);
   noStroke();
 
   for (int size : s.bandSizes) {
 
-    float y = map(size, 0, maxBP, gelY + gelHeight - 10, gelY + 10);
+    float y = map(size, 0, maxBP, 65 + 400 - 10, 65 + 10);
 
     rect(laneX - 18, y - 2, 36, 5);
   }
 }
+
 void drawGelPad() {
 
   background(210);
-
-  float gelWidth = 560;
-  float gelHeight = 400;   // shorter than 500
-
-  float gelX = (width - gelWidth) / 2;
-  float gelY = 65;
-
-  float gelTopPad = 35;
-  float gelBottomPad = 35;
-
-  float usableTop = gelY + gelTopPad;
-  float usableBottom = gelY + gelHeight - gelBottomPad;
-
   fill(235);
   stroke(90);
-  rect(gelX, gelY, gelWidth, gelHeight);
-
-  float laneWidth = gelWidth / 4;
-
-  float kittenLaneX = gelX + laneWidth * 0.5;
+  rect(220, 65, 560, 400);
 
   float[] sampleLaneX = new float[3];
 
   for (int i = 0; i < 3; i++) {
-    sampleLaneX[i] = gelX + laneWidth * (i + 1) + laneWidth * 0.5;
+    sampleLaneX[i] = 290 + 140 * (i + 1);
   }
 
   // lane dividers
   stroke(140);
   for (int i = 1; i < 4; i++) {
-    float x = gelX + laneWidth * i;
-    line(x, gelY, x, gelY + gelHeight);
+    float x = 220 + 140 * i;
+    line(x, 65, x, 465);
   }
 
   // labels
@@ -92,12 +95,12 @@ void drawGelPad() {
   textSize(14);
 
   if (caseKitten != null) {
-    text(caseKitten.name, kittenLaneX, gelY - 15);
+    text(caseKitten.name, 290, 65 - 15);
   }
 
   for (int i = 0; i < samples.size() && i < 3; i++) {
     if (samples.get(i).cat != null) {
-      text(samples.get(i).cat.name, sampleLaneX[i], gelY - 15);
+      text(samples.get(i).cat.name, sampleLaneX[i], 65 - 15);
     }
   }
 
@@ -110,21 +113,21 @@ void drawGelPad() {
   for (int b : bp) {
 
     // 800 at top, 100 at bottom
-    float y = map(b, 800, 100, usableTop, usableBottom);
+    float y = map(b, 800, 100, 100, 430);
 
     fill(0);
-    text(b, gelX - 8, y);
+    text(b, 220 - 8, y);
 
     stroke(170);
-    line(gelX, y, gelX + gelWidth, y);
+    line(220, y, 220 + 560, y);
   }
 
   if (caseKitten != null) {
-    drawKittenBands(kittenLaneX, usableTop, usableBottom - usableTop);
+    drawKittenBands(290, 100, 430 - 100);
   }
 
   for (int i = 0; i < samples.size() && i < 3; i++) {
-    drawSampleBands(samples.get(i), sampleLaneX[i], usableTop, usableBottom - usableTop);
+    drawSampleBands(samples.get(i), sampleLaneX[i], 100, 430 - 100);
   }
   
   fill(100, 200, 255);
@@ -133,14 +136,18 @@ void drawGelPad() {
   textSize(20);
   text("Who is " + caseKitten.name + "'s father?", 250, 550);
 }
+
 void drawEnzymeScreen() {
 
   float startX = 50;
   float startY = 100;
 
   animationStep = (millis() - animationStartTime) / 5000 + 1;
-  if (animationStep > 5) animationStep = 5;
-
+  
+  if (animationStep > 5) {
+    animationStep = 5;
+  }
+  
   fill(255);
   textAlign(CENTER);
   textSize(26);
@@ -155,8 +162,7 @@ void drawEnzymeScreen() {
   }
   else if (animationStep == 3) {
   stepDescription = "Step 3: DNA Cut";
-}
- 
+  }
   else if (animationStep == 4) {
   stepDescription = "Step 4: Fragments Formed";
   }
@@ -170,8 +176,10 @@ void drawEnzymeScreen() {
 
     Sample s = samples.get(i);
 
-    if (s == null || s.cat == null) continue;
-
+    if (s == null || s.cat == null) {
+      continue;
+    }
+    
     float y = startY + i * 140;
 
     fill(0);
@@ -182,9 +190,15 @@ void drawEnzymeScreen() {
 
     s.drawDNA(startX, y);
 
-    if (animationStep >= 3) s.drawCutSites(startX, y + 30);
-    if (animationStep >= 4) s.drawFragments(startX, y + 60);
-    if (animationStep >= 5) s.drawFragmentLabels(startX, y + 90);
+    if (animationStep >= 3) {
+      s.drawCutSites(startX, y + 30);
+    }
+    if (animationStep >= 4) {
+      s.drawFragments(startX, y + 60);
+    }
+    if (animationStep >= 5) {
+      s.drawFragmentLabels(startX, y + 90);
+    }
   }
 }
 
@@ -217,6 +231,7 @@ void loadSampleScreen() {
 
     Cat c = cats.get(i);
     if (c.img != null) {
+      imageMode(CORNER);
       image(c.img, x, y, iconSize, iconSize);
     }
 

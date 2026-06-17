@@ -1,14 +1,16 @@
 class Sample {
+  ArrayList<Integer> cutSites;
+  ArrayList<String> fragments;
+  ArrayList<Integer> bandSizes;
 
   boolean filled;
+
   float x_pos, y_pos;
+  
   PImage rackImg;
 
   String dnaSequence;
   String type;
-  ArrayList<Integer> cutSites;
-  ArrayList<String> fragments;
-  ArrayList<Integer> bandSizes;
 
   Cat cat;
 
@@ -17,10 +19,10 @@ class Sample {
     x_pos = x;
     y_pos = y;
     cat = null;
+   
     cutSites = new ArrayList<Integer>();
     fragments = new ArrayList<String>();
     bandSizes = new ArrayList<Integer>();
-
   }
 
   void drawRack() {
@@ -37,7 +39,10 @@ class Sample {
 
   // first draw full DNA sequence
   void drawDNA(float x, float y) {
-    if (dnaSequence == null) return;
+    if (dnaSequence == null) {
+      return;
+    }
+    
     fill(255);
     textAlign(LEFT);
     text(dnaSequence, x, y);
@@ -45,7 +50,9 @@ class Sample {
 
   // show red lines between cut fragments
   void drawCutSites(float x, float y) {
-    if (dnaSequence == null) return;
+    if (dnaSequence == null) {
+      return;
+    }
     
     fill(255);
     textAlign(LEFT);
@@ -70,6 +77,7 @@ class Sample {
 
       // draw the base
       String base = String.valueOf(dnaSequence.charAt(i));
+      
       text(base, currentX, y);
       currentX += textWidth(base); 
     }
@@ -78,8 +86,10 @@ class Sample {
 
   void drawFragments(float x, float y) {
 
-    if (dnaSequence == null) return;
-  
+    if (dnaSequence == null){
+      return;
+    }
+    
     float currentX = x;
     float cutGap = 40;
   

@@ -1,28 +1,25 @@
 import g4p_controls.*;
 import processing.sound.*;
 
-float GEL_WIDTH = 800;
-float GEL_HEIGHT = 600;
-float GEL_TOP = 100;
-boolean gelInitialized = false;
-float gelX, gelY;
-String[] options;
-String[] enzymeOptions = {"EcoRI", "BamHI", "HindIII"};
-
-int screen = 1;    // home (0)  samples (1)    enzymes (2)
-int numRacks = 3;
-int animationStartTime;
-int animationStep;
-
+// VARIABLES
 ArrayList<Cat> cats;
 ArrayList<Kitten> kittens;
 ArrayList<Sample> samples;
 
-PImage plate, machine, holder1, holder2, holder3;
-
 boolean sampleTaken;
 
 float dragX, dragY; 
+
+int screen = 0;    // home (0)  samples (1)    enzymes (2)  gel setup (3)
+int numRacks = 3;
+int animationStartTime;
+int animationStep = 1;
+
+PImage plate, machine, holder1, holder2, holder3, logo;
+
+String[] options;
+String[] enzymeOptions = {"EcoRI", "BamHI", "HindIII"};
+String result = "";
 
 SoundFile trash;
 
@@ -31,6 +28,7 @@ Enzyme enzyme;
 Cat draggedCat = null;
 Cat placedCat = null;
 Cat selectedCat = null;
+Cat infoCat = null;
 
 Kitten caseKitten;
 
@@ -40,6 +38,7 @@ void setup() {
 
   plate = loadImage("plate.png");
   machine = loadImage("machine_1.png");
+  logo = loadImage("logo.png");
   
   cats = new ArrayList<Cat>();
   kittens = new ArrayList<Kitten>();
@@ -55,16 +54,6 @@ void setup() {
   createDropdownLists();
   
   surface.setLocation(350, 0); // use setLocation to ensure windows don't overlap  
-  sampleButton.setVisible(false);
-  sampleButton.setVisible(false);
-  label1.setVisible(false);
-  label2.setVisible(false);
-  caseDropdown.setVisible(false);
-  caseButton.setVisible(false);
-  enzymeDropdown.setVisible(false);
-  
-  animationStep = 1;
-
 }
 
 void draw() {
@@ -76,6 +65,9 @@ void draw() {
   }
   else {
    retakeButton.setVisible(true);
+  }
+  if (screen == 0) {
+   drawHomeScreen(); 
   }
   
   if (screen == 1) {
@@ -106,30 +98,26 @@ void draw() {
   }
   if (screen == 3) {
     
-    checkButton.setVisible(true);
     sample1Box.setVisible(true);
     sample2Box.setVisible(true);
     sample3Box.setVisible(true);
-   
-    gelInitialized = false;
-    
-    if (samples.size() > 0) {
-      loadTestSamples();  
-    }
     
     checkButton.setVisible(true);
     sample1Box.setText(samples.get(0).cat.name);
     sample2Box.setText(samples.get(1).cat.name);
     sample3Box.setText(samples.get(2).cat.name);
     drawGelPad();
+    
+    if (!result.equals("")) {
+      textSize(16);
+      textAlign(LEFT);
+      text(result, 250, 600);
+    }
   }
   else {
     checkButton.setVisible(false);
     sample1Box.setVisible(false);
     sample2Box.setVisible(false);
     sample3Box.setVisible(false); 
-  }
-  
-  //noLoop();
-  
+  }  
 }
