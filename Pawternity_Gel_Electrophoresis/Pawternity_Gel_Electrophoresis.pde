@@ -9,7 +9,7 @@ float gelX, gelY;
 String[] options;
 String[] enzymeOptions = {"EcoRI", "BamHI", "HindIII"};
 
-int screen = 3;    // home (0)  samples (1)    enzymes (2)
+int screen = 1;    // home (0)  samples (1)    enzymes (2)
 int numRacks = 3;
 int animationStartTime;
 int animationStep;
@@ -35,7 +35,7 @@ Cat selectedCat = null;
 Kitten caseKitten;
 
 void setup() {
-  size(1000, 800);
+  size(1000, 650);
   background(100, 200, 255);
 
   plate = loadImage("plate.png");
@@ -106,6 +106,7 @@ void draw() {
   }
   if (screen == 3) {
     
+    checkButton.setVisible(true);
     sample1Box.setVisible(true);
     sample2Box.setVisible(true);
     sample3Box.setVisible(true);
@@ -113,15 +114,17 @@ void draw() {
     gelInitialized = false;
     
     if (samples.size() > 0) {
-      loadTestSamples();   // ONLY ONCE PER ENTRY (safe now if guarded)
+      loadTestSamples();  
     }
     
+    checkButton.setVisible(true);
     sample1Box.setText(samples.get(0).cat.name);
     sample2Box.setText(samples.get(1).cat.name);
     sample3Box.setText(samples.get(2).cat.name);
     drawGelPad();
   }
   else {
+    checkButton.setVisible(false);
     sample1Box.setVisible(false);
     sample2Box.setVisible(false);
     sample3Box.setVisible(false); 

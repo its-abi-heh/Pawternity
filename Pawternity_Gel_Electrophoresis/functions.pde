@@ -1,9 +1,86 @@
+int countMatchingBands(ArrayList<Integer> kittenBands,
+                       ArrayList<Integer> fatherBands) {
 
+  int matches = 0;
+
+  for (int kb : kittenBands) {
+
+    for (int fb : fatherBands) {
+
+      // allow slight gel measurement error
+      if (abs(kb - fb) <= 2) {
+        matches++;
+        break;
+      }
+    }
+  }
+
+  return matches;
+}
+
+Cat findLikelyFather() {
+
+  if (caseKitten == null || enzyme == null) return null;
+
+  String kittenDNA = caseKitten.loadDnaProfile();
+
+  ArrayList<Integer> kittenBands =
+      enzyme.getFragments(kittenDNA);
+
+  Cat bestCat = null;
+  int bestScore = -1;
+
+  for (int i = 0; i < samples.size(); i++) {
+
+    Sample s = samples.get(i);
+
+    if (!s.filled || s.cat == null) continue;
+
+    int score =
+      countMatchingBands(kittenBands, s.bandSizes);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestCat = s.cat;
+    }
+  }
+
+  return bestCat;
+}
+
+float calculateMatchPercent(
+    ArrayList<Integer> kittenBands,
+    ArrayList<Integer> fatherBands) {
+
+  int matches = countMatchingBands(
+      kittenBands,
+      fatherBands);
+
+  return 100.0 * matches /
+         kittenBands.size();
+}
+
+int traitMatches(String[] kittenTraits,
+                 String[] fatherTraits) {
+
+  int matches = 0;
+
+  for (int i = 0; i < kittenTraits.length; i++) {
+
+    if (kittenTraits[i].equals(
+        fatherTraits[i])) {
+
+      matches++;
+    }
+  }
+
+  return matches;
+}
 
 void loadTestSamples() {
 
-  if (gelInitialized) return;   // 🔥 prevents overwriting every frame
-
+  if (gelInitialized) return;
+ 
   enzyme = new Enzyme("EcoRI", "GAATTC");
 
   for (int i = 0; i < samples.size(); i++) {
@@ -72,7 +149,7 @@ void loadCats() {
     String[] traits = split(lines[i + 1], ',');
 
     //Cat cat = new Cat(info[0], info[1], traits);
-    Cat cat = new Cat(info[0], "mittens.png", traits);
+    Cat cat = new Cat(info[0], info[1], traits);
 
     cats.add(cat);
   }
@@ -139,13 +216,11 @@ void mousePressed() {
           s.filled = false;
           s.cat = null;          
           s.dnaSequence = null;
-          println("Rack " + i + " set back to unfilled.");
           break;
         }
       }
     }
   }
-  print("\n",mouseX, mouseY);
 }
 
 void mouseReleased() {

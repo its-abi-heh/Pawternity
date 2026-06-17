@@ -13,14 +13,14 @@ blue,black,short,none
 Charlie,charlie.png,cat
 green,gray,short,stripes
 
-Milo,milo.png,cat
+Tiger,tiger.png,cat
 yellow,orange,long,none
 
 Simba,simba.png,cat
 green,brown,short,none
 
-Tiger,tiger.png,cat
-yellow,orange,short,stripes
+Milo,milo.png,cat
+blue,white,long,stripes
 
 Jasper,jasper.png,cat
 blue,black,long,none

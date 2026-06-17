@@ -41,9 +41,7 @@ public void takeSample(GButton source, GEvent event) { //_CODE_:sampleButton:691
         
       placedCat = null;
     }
-  
-  //loadTestSamples();
-  
+    
 } //_CODE_:sampleButton:691472:
 
 public void caseSelected(GDropList source, GEvent event) { //_CODE_:caseDropdown:955074:
@@ -60,7 +58,6 @@ public void showCaseInfo(GButton source, GEvent event) { //_CODE_:caseButton:275
 public void enzymeSelected(GDropList source, GEvent event) { //_CODE_:enzymeDropdown:210050:
   String selectedEnzyme = enzymeDropdown.getSelectedText();
   
-  println(selectedEnzyme);
   if (selectedEnzyme.equals("EcoRI")) {
     enzyme = new Enzyme("EcoRI", "GAATTC");
   }
@@ -104,6 +101,53 @@ public void sample2Selected(GCheckbox source, GEvent event) { //_CODE_:sample2Bo
   }
 } //_CODE_:sample2Box:342753:
 
+public void checkFather(GButton source, GEvent event) { //_CODE_:checkButton:409539:
+  if (caseKitten == null || enzyme == null)
+    return;
+
+  String kittenDNA =
+      caseKitten.loadDnaProfile();
+
+  ArrayList<Integer> kittenBands =
+      enzyme.getFragments(kittenDNA);
+
+  Cat bestCat = null;
+  float bestPercent = -1;
+
+  for (int i = 0; i < samples.size(); i++) {
+
+    Sample s = samples.get(i);
+
+    if (!s.filled || s.cat == null)
+      continue;
+
+    float percent =
+      calculateMatchPercent(
+        kittenBands,
+        s.bandSizes);
+
+    println(
+      s.cat.name +
+      " match = " +
+      nf(percent, 0, 1) +
+      "%"
+    );
+
+    if (percent > bestPercent) {
+      bestPercent = percent;
+      bestCat = s.cat;
+    }
+  }
+
+  if (bestCat != null) {
+    // for now just print
+    println();
+    println("Most likely father:");
+    println(bestCat.name);
+    println("Match score: " + nf(bestPercent,0,1)+ "%");
+  }
+} //_CODE_:checkButton:409539:
+
 synchronized public void win_draw1(PApplet appc, GWinData data) { //_CODE_:window1:528241:
   appc.background(230);
 } //_CODE_:window1:528241:
@@ -136,8 +180,6 @@ public void goVisualize(GButton source, GEvent event) { //_CODE_:visualizeButton
       screen = 2;
       animationStartTime = millis();
       
-    } else {
-      println("You must fill ALL 3 sample slots and select an enzyme first.");
     }
 } //_CODE_:visualizeButton:568749:
 
@@ -157,8 +199,6 @@ public void goEvaluate(GButton source, GEvent event) { //_CODE_:evaluateCaseButt
       screen = 3;
       animationStartTime = millis();
       
-    } else {
-      println("You must fill ALL 3 sample slots and select an enzyme first.");
     }
 } //_CODE_:evaluateCaseButton:379020:
 
@@ -213,7 +253,11 @@ public void createGUI(){
   sample2Box.setText("checkbox text");
   sample2Box.setOpaque(false);
   sample2Box.addEventHandler(this, "sample2Selected");
-  window1 = GWindow.getWindow(this, "Window title", 0, 0, 350, 800, JAVA2D);
+  checkButton = new GButton(this, 723, 539, 105, 30);
+  checkButton.setText("Run Analysis");
+  checkButton.setLocalColorScheme(GCScheme.GREEN_SCHEME);
+  checkButton.addEventHandler(this, "checkFather");
+  window1 = GWindow.getWindow(this, "Window title", 0, 0, 350, 650, JAVA2D);
   window1.noLoop();
   window1.setActionOnClose(G4P.KEEP_OPEN);
   window1.addDrawHandler(this, "win_draw1");
@@ -266,6 +310,7 @@ GButton retakeButton;
 GCheckbox sample1Box; 
 GCheckbox sample3Box; 
 GCheckbox sample2Box; 
+GButton checkButton; 
 GWindow window1;
 GTextArea infoBox; 
 GLabel label3; 

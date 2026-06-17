@@ -35,7 +35,7 @@ class Sample {
   }
 
 
-  // LINE 1: Full raw DNA sequence string (unbroken)
+  // first draw full DNA sequence
   void drawDNA(float x, float y) {
     if (dnaSequence == null) return;
     fill(255);
@@ -43,7 +43,7 @@ class Sample {
     text(dnaSequence, x, y);
   }
 
-  // LINE 2: DNA bases pushed apart with empty spacing AND red lines at cuts
+  // show red lines between cut fragments
   void drawCutSites(float x, float y) {
     if (dnaSequence == null) return;
     
@@ -52,26 +52,26 @@ class Sample {
     noStroke();
 
     float currentX = x;
-    float cutGapping = 40; // Dynamic space added right inside the cut zone!
+    float cutGapping = 40;
 
     for (int i = 0; i < dnaSequence.length(); i++) {
-      // Check if a restriction cut happens BEFORE drawing this character
+      // Check if a restriction cut occurs
       if (cutSites.contains(i) && i > 0) {
         
-        // Draw the red vertical line centered right in the middle of our new extra space gap
+        // Draw the red vertical line centered at a cut
         stroke(255, 0, 0);
         strokeWeight(3);
         float lineX = currentX + (cutGapping / 2);
         line(lineX, y - 15, lineX, y + 5);
-        noStroke(); // Turn off strokes to draw text again
+        noStroke();
         
-        currentX += cutGapping; // Push coordinate out by the gap size
+        currentX += cutGapping;
       }
 
-      // Draw the single character base letter
+      // draw the base
       String base = String.valueOf(dnaSequence.charAt(i));
       text(base, currentX, y);
-      currentX += textWidth(base); // Increment by width of character
+      currentX += textWidth(base); 
     }
     strokeWeight(1);
   }
@@ -122,23 +122,23 @@ class Sample {
     }
   }
 
-  // LINE 4: NEW! Number labels placed cleanly underneath each fragment on line 3
+  // label fragments
   void drawFragmentLabels(float x, float y) {
     if (fragments == null || fragments.isEmpty()) return;
 
-    fill(150, 150, 150); // Muted gray color for labels
+    fill(0);
     textAlign(LEFT);
     noStroke();
 
     float currentX = x;
-    float fragmentSpacing = 50; // MUST match Line 3 spacing exactly!
+    float fragmentSpacing = 50;
 
     for (int i = 0; i < fragments.size(); i++) {
       String frag = fragments.get(i);
-      String label = "Frag " + (i + 1); // Label numbers start at 1 (Frag 1, Frag 2...)
+      String label = "Frag " + (i + 1);
       
       text(label, currentX, y);
-      currentX += textWidth(frag) + fragmentSpacing; // Moves down using sequence width
+      currentX += textWidth(frag) + fragmentSpacing;
     }
   }
     
