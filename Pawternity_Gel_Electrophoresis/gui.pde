@@ -15,35 +15,48 @@
  */
 
 public void takeSample(GButton source, GEvent event) { //_CODE_:sampleButton:691472:
+  Boolean duplicate = false;
+
   // if a cat has actually been placed, we can take a sample
   if (placedCat != null) { 
       String dnaData = placedCat.loadDnaProfile();
       
-      // run through all samples
+      // run through all samples and check if one of them is already an existing cat
       for (int i = 0; i < samples.size(); i++) {
         Sample s = samples.get(i); 
-        
-        // first, we can't add duplicate samples of the same cat
         if (s.filled && s.cat != null && s.cat.name.equals(placedCat.name)) {          
-          placedCat = null;
-          break;
+          duplicate = true;
+          break; // stop looking, since a duplicate was found
         }
-        
-        // if the sample is empty, we can add a new sample
-        if (s.filled == false) {  
-          // set the dna stored in the sample to the cat's dna
-          s.dnaSequence = dnaData;
-          s.cutSites = enzyme.findCutSites(s.dnaSequence);
-          s.fragments = enzyme.digest(s.dnaSequence);
-          s.generateBands(enzyme);
-
-          // label the sample with the cat data
-          s.cat = placedCat;
+      }
+      
+      if (duplicate == false) {
+        // run through all samples
+        for (int i = 0; i < samples.size(); i++) {
+          Sample s = samples.get(i); 
           
-          // the sample is now filled
-          s.filled = true;
+          // first, we can't add duplicate samples of the same cat
+          if (s.filled && s.cat != null && s.cat.name.equals(placedCat.name)) {          
+            placedCat = null;
+            break;
+          }
           
-          break;
+          // if the sample is empty, we can add a new sample
+          if (s.filled == false) {  
+            // set the dna stored in the sample to the cat's dna
+            s.dnaSequence = dnaData;
+            s.cutSites = enzyme.findCutSites(s.dnaSequence);
+            s.fragments = enzyme.digest(s.dnaSequence);
+            s.generateBands(enzyme);
+  
+            // label the sample with the cat data
+            s.cat = placedCat;
+            
+            // the sample is now filled
+            s.filled = true;
+            
+            break;
+          }
         }
       }
       
