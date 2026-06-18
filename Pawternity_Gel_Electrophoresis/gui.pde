@@ -15,50 +15,62 @@
  */
 
 public void takeSample(GButton source, GEvent event) { //_CODE_:sampleButton:691472:
-  if (placedCat != null) {    
+  // if a cat has actually been placed, we can take a sample
+  if (placedCat != null) { 
       String dnaData = placedCat.loadDnaProfile();
-  
+      
+      // run through all samples
       for (int i = 0; i < samples.size(); i++) {
-        Sample s = samples.get(i);    
-        if (s.filled == false) {
-          
+        Sample s = samples.get(i); 
+        
+        // first, we can't add duplicate samples of the same cat
+        if (s.filled && s.cat != null && s.cat.name.equals(placedCat.name)) {          
+          placedCat = null;
+          break;
+        }
+        
+        // if the sample is empty, we can add a new sample
+        if (s.filled == false) {  
+          // set the dna stored in the sample to the cat's dna
           s.dnaSequence = dnaData;
-          
-          // calculate and save the enzyme cuts and fragments into the sample object
-          if (enzyme == null) {
-            enzyme = new Enzyme("EcoRI", "GAATTC"); // initialize the enzyme
-          }
           s.cutSites = enzyme.findCutSites(s.dnaSequence);
           s.fragments = enzyme.digest(s.dnaSequence);
           s.generateBands(enzyme);
 
+          // label the sample with the cat data
           s.cat = placedCat;
+          
+          // the sample is now filled
           s.filled = true;
           
           break;
         }
       }
-        
+      
+      // reset the plaecd cat
       placedCat = null;
     }
-    
 } //_CODE_:sampleButton:691472:
 
 public void caseSelected(GDropList source, GEvent event) { //_CODE_:caseDropdown:955074:
-  println("caseDropdown - GDropList >> GEvent." + event + " @ " + millis());
+ int selectedIndex = caseDropdown.getSelectedIndex();
+ 
+ // update the case kitten with the selected kitten
+ caseKitten = kittens.get(selectedIndex);
 } //_CODE_:caseDropdown:955074:
 
 public void showCaseInfo(GButton source, GEvent event) { //_CODE_:caseButton:275004:
-  int selectedIndex = caseDropdown.getSelectedIndex();
- 
-  caseKitten = kittens.get(selectedIndex);
+  // reset the info cat so the kitten is the object of interest
   infoCat = null;
+  
+  // update the text area
   updateInformationBox();
 } //_CODE_:caseButton:275004:
 
 public void enzymeSelected(GDropList source, GEvent event) { //_CODE_:enzymeDropdown:210050:
   String selectedEnzyme = enzymeDropdown.getSelectedText();
   
+  // create a restriction enzyme
   if (selectedEnzyme.equals("EcoRI")) {
     enzyme = new Enzyme("EcoRI", "GAATTC");
   }
@@ -69,7 +81,7 @@ public void enzymeSelected(GDropList source, GEvent event) { //_CODE_:enzymeDrop
     enzyme = new Enzyme("HindIII", "AAGCTT");    
   }
 
-  // Force all currently held tubes to instantly recalculate with the new enzyme choice
+  // if a new enzyme is selected, the DNA data must be recalculated using that enzyme
   for (int i = 0; i < samples.size(); i++) {
     Sample s = samples.get(i);
     if (s.filled && s.dnaSequence != null) {
@@ -81,118 +93,131 @@ public void enzymeSelected(GDropList source, GEvent event) { //_CODE_:enzymeDrop
 } //_CODE_:enzymeDropdown:210050:
 
 public void removeSample(GButton source, GEvent event) { //_CODE_:retakeButton:320982:
+  // just reset the placed cat
   placedCat = null;
 } //_CODE_:retakeButton:320982:
 
 public void sample1Selected(GCheckbox source, GEvent event) { //_CODE_:sample1Box:299050:
-  if (!sample2Box.isSelected() && !sample3Box.isSelected()) {
+  // if none of the other cats have been selected
+  if (source.isSelected() && (sample2Box.isSelected() || sample3Box.isSelected())) {
+    // don't indicate that this cat has been selected if other samples have been selected
+
+    source.setSelected(false);
+    return;
+  }
+
+  // Otherwise, assign selected cats and results
+  if (source.isSelected()) {
     selectedCat = samples.get(0).cat;
     result = "";
-  }
-  else {
-   selectedCat = null; 
+  } 
+  else if (selectedCat == samples.get(0).cat) {
+    selectedCat = null;
   }
 } //_CODE_:sample1Box:299050:
 
 public void sample3Selected(GCheckbox source, GEvent event) { //_CODE_:sample3Box:662928:
-  if (!sample2Box.isSelected() && !sample1Box.isSelected()) {
+  // same as above
+  if (source.isSelected() && (sample1Box.isSelected() || sample2Box.isSelected())) {
+    source.setSelected(false);
+    return;
+  }
+
+  if (source.isSelected()) {
     selectedCat = samples.get(2).cat;
     result = "";
-  }
-  else {
-   selectedCat = null; 
+  } 
+  else if (selectedCat == samples.get(2).cat) {
+    selectedCat = null;
   }
 } //_CODE_:sample3Box:662928:
 
 public void sample2Selected(GCheckbox source, GEvent event) { //_CODE_:sample2Box:342753:
-  if (!sample1Box.isSelected() && !sample3Box.isSelected()) {
+  // same as above
+  if (source.isSelected() && (sample1Box.isSelected() || sample3Box.isSelected())) {
+    source.setSelected(false);
+    return;
+  }
+
+  if (source.isSelected()) {
     selectedCat = samples.get(1).cat;
     result = "";
-  }
-  else {
-   selectedCat = null; 
+  } 
+  else if (selectedCat == samples.get(1).cat) {
+    selectedCat = null;
   }
 } //_CODE_:sample2Box:342753:
 
 public void checkFather(GButton source, GEvent event) { //_CODE_:checkButton:409539:
-
+  // get data about the case kitten
   String kittenDNA = caseKitten.loadDnaProfile();
   ArrayList<Integer> kittenBands = enzyme.getFragments(kittenDNA);
-  float bestPercent = -1;
-  float userSelectedPercent = 0;
-  int filledSampleCount = 0;
   
-  if (caseKitten == null || enzyme == null || selectedCat == null) {
-    return;
-  }
-  
-  // Find the absolute maximum matching percentage present in the racks
-  for (int i = 0; i < samples.size(); i++) {
-    Sample s = samples.get(i);
-
-    int matches = countMatchingBands(kittenBands, s.bandSizes);
-    float percent = 0.0f;
-
-    if (!s.filled || s.cat == null) {
-      continue;
-    }
+  float bestPercent = -1;    // best matching case percent
+  float userPercent = 0;     // matching percent between user's selected cat and case kitten
     
-    filledSampleCount++;
-
-    if (kittenBands.size() > 0) {
-      percent = 100.0f * (float)matches / (float)kittenBands.size();
-    }
-
-    if (s.cat.name.equals(selectedCat.name)) {
-      userSelectedPercent = percent;
-    }
-
-    if (percent > bestPercent) {
-      bestPercent = percent;
-    }
-  }
-
-  // count how many cats actually share that maximum percentage
   int topMatchCount = 0;
+  
   Cat bestCat = null;
 
+  // for every sample
   for (int i = 0; i < samples.size(); i++) {
     Sample s = samples.get(i);
-    if (!s.filled || s.cat == null) continue;
 
-    int matches = countMatchingBands(kittenBands, s.bandSizes);
-    float percent = 0.0f;
-    if (kittenBands.size() > 0) {
-      percent = 100.0f * (float)matches / (float)kittenBands.size();
+    // get the sample bands from the enzyme fragments
+    if (s.bandSizes == null || s.bandSizes.isEmpty()) {
+      s.bandSizes = enzyme.getFragments(s.cat.loadDnaProfile());
     }
 
-    if (abs(percent - bestPercent) < 0.01f && bestPercent > 0) {
+    // calculate the match percent between the selectedCat data and the kitten data
+    float percent = calculateMatchPercent(kittenBands, s.bandSizes);
+    
+    // if the current sample's cat name matches a selectedCat name, save that match percentage to a separate variable (userPercent).
+    if (s.cat.name.equals(selectedCat.name)) {
+      userPercent = percent;
+    }
+
+    // Check if a higher match percent has been found
+    if (percent > bestPercent) {
+      // update highest percent and highest matching cat
+      bestPercent = percent;
+      bestCat = s.cat;
+      topMatchCount = 1; // Reset tie counter
+    } 
+    // Check if this cat tied with the current highest match percentage
+    else if (abs(percent - bestPercent) < 0.01f && bestPercent > 0) {
       topMatchCount++;
-      bestCat = s.cat; // will temporarily hold a top match candidate
     }
   }
-
-  // compute explicit messaging parameters based on clean counts
-  
-  // no matches
+    println(nf(userPercent, 0, 1));
+  // no cats have matching bands with the kitten
   if (bestPercent <= 0) {
-    result = "None of the tested cats share any DNA bands with " + caseKitten.name + " (0% matches). The true father isn't here!";
+    result = "None of the tested cats share any DNA bands with " + "\n" + caseKitten.name + " (0% matches). The true father isn't here!";
   }
-  // all cats have same number of matching bands
-  else if (topMatchCount == filledSampleCount && abs(userSelectedPercent - bestPercent) < 0.01f) {
-    result = "All suspects share the exact same number of matching bands (" + nf(userSelectedPercent, 0, 1) + "%). The test is completely inconclusive!";
+  
+  // if all cats share the same number of matched bands, it is a tie
+  else if (topMatchCount == 3 && abs(userPercent - bestPercent) < 0.01f) {
+    result = "All suspects share the exact same number of matching bands (" + nf(userPercent, 0, 1) + "%)." + "\n" + "The test is completely inconclusive!";
   }
-  // a partial tie exists (e.g., 2 out of 3 match evenly at the top)
-  else if (topMatchCount > 1 && abs(userSelectedPercent - bestPercent) < 0.01f) {
-    result = "It's a tie! " + selectedCat.name + " matches at " + nf(userSelectedPercent, 0, 1) + "%. Can you identify the other tied candidate?";
+  
+  // if two cats have the same number of matched bands, it could be either one... a tie!
+  else if (topMatchCount > 1 && abs(userPercent - bestPercent) < 0.01f) {
+    result = "It's a tie! " + selectedCat.name + " matches at " + nf(userPercent, 0, 1) + "%." + "\n" + "Can you identify the other tied candidate?";
   } 
-  // the user successfully guessed the single, undisputed highest match
+  
+  // if one cat has a match percentage of 100, it is almost definetely (99.99% chance) the father!
+  else if (topMatchCount == 1 && bestCat != null && bestCat.name.equals(selectedCat.name) && nf(userPercent, 0, 1).equals("100.0")) {
+    result = "That is correct! " + bestCat.name + " is a " + nf(userPercent, 0, 1) + "%" + "\n" + "match and is almost definetly " + caseKitten.name + "'s father.";
+  }
+  
+  // if one cat has a higher match percentage, it is MOST LIKELY the father
   else if (topMatchCount == 1 && bestCat != null && bestCat.name.equals(selectedCat.name)) {
-    result = "That is correct! " + bestCat.name + " is a " + nf(userSelectedPercent, 0, 1) + "% match for " + caseKitten.name + "'s DNA sample.";
-  } 
-  // the user guessed incorrectly
+    result = "That is correct! " + bestCat.name + " is a " + nf(userPercent, 0, 1) + "%" + "\n" + "match and is most likely " + caseKitten.name + "'s father.";
+  }
+  
+  // if the user has selected a cat that doesn't have the highest match percentage
   else {
-    result = "Based on the data, " + selectedCat.name + " is a " + nf(userSelectedPercent, 0, 1) + "% match and most likely isn't the father. Guess again!";
+    result = "Based on the data, " + selectedCat.name + " is a " + nf(userPercent, 0, 1) + "% match" + "\n" + "and most likely isn't the father. Guess again!";
   }
 } //_CODE_:checkButton:409539:
 
@@ -213,42 +238,53 @@ public void goSampleScreen(GButton source, GEvent event) { //_CODE_:collectButto
 } //_CODE_:collectButton:715923:
 
 public void goVisualize(GButton source, GEvent event) { //_CODE_:visualizeButton:568749:
-  boolean allSamplesFilled = true; // Start by assuming everything is perfect
+  // changes screen to enzyme restriction visualization process screen
+  boolean allSamplesFilled = true; // start by assuming all samples are filled
     
-    for (int i = 0; i < samples.size(); i++) {
-      Sample s = samples.get(i);    
-      
-      if (s.filled == false) {
-        allSamplesFilled = false;
-        break; 
-      }
-    }
+  // check if all the samples are filled
+  for (int i = 0; i < samples.size(); i++) {
+    Sample s = samples.get(i);    
     
-    if (allSamplesFilled == true && enzyme != null) {
-      screen = 2;
-      animationStartTime = millis();
+    if (s.filled == false) {
+      allSamplesFilled = false;
       
+      break; 
     }
+  }
+  
+  // as long as an enzyme has been selected and all samples have been taken we can proceed to the next screen
+  if (allSamplesFilled == true && enzyme != null) {
+    screen = 2;
+    
+    // the next screen requires animation
+    animationStartTime = millis();
+  }
 } //_CODE_:visualizeButton:568749:
 
 public void goEvaluate(GButton source, GEvent event) { //_CODE_:evaluateCaseButton:379020:
+  // once again, check if all samples have been filled
   boolean allSamplesFilled = true;
     
-    for (int i = 0; i < samples.size(); i++) {
-      Sample s = samples.get(i);    
-      
-      if (s.filled == false) {
-        allSamplesFilled = false;
-        break; 
-      }
-    }
+  for (int i = 0; i < samples.size(); i++) {
+    Sample s = samples.get(i);    
     
-    if (allSamplesFilled == true && enzyme != null) {
-      screen = 3;
-      animationStartTime = millis();
+    if (s.filled == false) {
+      allSamplesFilled = false;
       
+      break; 
     }
+  }
+  
+  // if evreything has been filled or selected, we can go to the next screen.
+  if (allSamplesFilled == true && enzyme != null) {
+    screen = 3;      
+  }
 } //_CODE_:evaluateCaseButton:379020:
+
+public void sensitivityChanged(GCustomSlider source, GEvent event) { //_CODE_:sensitivitySlider:459638:
+  // update the sensitivity with the slider value
+  sensitivity = sensitivitySlider.getValueI();
+} //_CODE_:sensitivitySlider:459638:
 
 
 
@@ -280,7 +316,7 @@ public void createGUI(){
   label2.setOpaque(false);
   enzymeDropdown = new GDropList(this, 610, 220, 340, 80, 3, 10);
   enzymeDropdown.setItems(loadStrings("list_210050"), 0);
-  enzymeDropdown.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  enzymeDropdown.setLocalColorScheme(GCScheme.GREEN_SCHEME);
   enzymeDropdown.addEventHandler(this, "enzymeSelected");
   retakeButton = new GButton(this, 343, 550, 112, 39);
   retakeButton.setText("Retake Sample");
@@ -309,40 +345,53 @@ public void createGUI(){
   window1.noLoop();
   window1.setActionOnClose(G4P.KEEP_OPEN);
   window1.addDrawHandler(this, "win_draw1");
-  infoBox = new GTextArea(window1, 20, 340, 300, 108, G4P.SCROLLBARS_NONE);
+  infoBox = new GTextArea(window1, 18, 360, 306, 144, G4P.SCROLLBARS_NONE);
   infoBox.setOpaque(true);
   infoBox.addEventHandler(this, "infoChanged");
-  label3 = new GLabel(window1, 20, 310, 120, 20);
+  label3 = new GLabel(window1, 18, 330, 120, 20);
   label3.setText("Information Box");
   label3.setOpaque(false);
-  homeButton = new GButton(window1, 20, 20, 300, 50);
+  homeButton = new GButton(window1, 24, 24, 300, 50);
   homeButton.setText("Go Home");
   homeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   homeButton.addEventHandler(this, "goHome");
-  collectButton = new GButton(window1, 20, 100, 300, 50);
+  collectButton = new GButton(window1, 24, 104, 300, 50);
   collectButton.setText("Collect Samples");
   collectButton.setLocalColorScheme(GCScheme.ORANGE_SCHEME);
   collectButton.addEventHandler(this, "goSampleScreen");
-  visualizeButton = new GButton(window1, 20, 180, 300, 50);
+  visualizeButton = new GButton(window1, 24, 184, 300, 50);
   visualizeButton.setText("Prep Samples");
   visualizeButton.setLocalColorScheme(GCScheme.YELLOW_SCHEME);
   visualizeButton.addEventHandler(this, "goVisualize");
-  evaluateCaseButton = new GButton(window1, 20, 250, 300, 40);
+  evaluateCaseButton = new GButton(window1, 24, 264, 300, 48);
   evaluateCaseButton.setText("Evaluate Results");
   evaluateCaseButton.setLocalColorScheme(GCScheme.GREEN_SCHEME);
   evaluateCaseButton.addEventHandler(this, "goEvaluate");
-  label4 = new GLabel(window1, 150, 60, 40, 40);
+  label4 = new GLabel(window1, 150, 66, 40, 40);
   label4.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
   label4.setText("↓ ");
   label4.setOpaque(false);
-  label5 = new GLabel(window1, 130, 150, 80, 20);
+  label5 = new GLabel(window1, 128, 152, 80, 20);
   label5.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
   label5.setText("↓ ");
   label5.setOpaque(false);
-  label6 = new GLabel(window1, 130, 230, 80, 20);
+  label6 = new GLabel(window1, 128, 240, 80, 20);
   label6.setTextAlign(GAlign.CENTER, GAlign.MIDDLE);
   label6.setText("↓ ");
   label6.setOpaque(false);
+  label7 = new GLabel(window1, 18, 522, 108, 20);
+  label7.setText("Adjust Sensitivity");
+  label7.setOpaque(false);
+  sensitivitySlider = new GCustomSlider(window1, 18, 552, 300, 68, "grey_blue");
+  sensitivitySlider.setShowValue(true);
+  sensitivitySlider.setShowLimits(true);
+  sensitivitySlider.setLimits(0, 0, 5);
+  sensitivitySlider.setNbrTicks(5);
+  sensitivitySlider.setStickToTicks(true);
+  sensitivitySlider.setShowTicks(true);
+  sensitivitySlider.setNumberFormat(G4P.INTEGER, 0);
+  sensitivitySlider.setOpaque(false);
+  sensitivitySlider.addEventHandler(this, "sensitivityChanged");
   window1.loop();
 }
 
@@ -369,3 +418,5 @@ GButton evaluateCaseButton;
 GLabel label4; 
 GLabel label5; 
 GLabel label6; 
+GLabel label7; 
+GCustomSlider sensitivitySlider; 

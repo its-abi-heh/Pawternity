@@ -1,246 +1,52 @@
+// These functions are used to draw different screens; the other tab has "helper functions" used in these functions.
+
+// draw home screen
 void drawHomeScreen() {
-  println(0);
   imageMode(CENTER);
+  
+  // draw the pawternity logo in the centre of the screen
   image(logo, 500, 325);
-  
 }
 
-void drawKittenBands(float laneX, float gelY, float gelHeight) {
-
-  if (caseKitten == null || enzyme == null) {
-    return;
-  }
-  
-  String dna = caseKitten.loadDnaProfile();
-  if (dna == null) {
-    return;
-  }
-  
-  ArrayList<Integer> bands = enzyme.getFragments(dna);
-  if (bands == null || bands.size() == 0) {
-    return;
-  }
-  
-  float maxBP = 0;
-  for (int b : bands) {
-    if (b > maxBP) maxBP = b;
-  }
-
-  if (maxBP <= 0) {
-    return;
-  }
-  fill(10, 20, 80);
-  noStroke();
-
-  for (int size : bands) {
-
-    float y = map(size, 0, maxBP, 65 + 400 - 10, 65 + 10);
-
-    rect(laneX - 18, y - 2, 36, 5);
-  }
-}
-
-void drawSampleBands(Sample s, float laneX, float gelY, float gelHeight) {
-
-  if (s == null || s.cat == null || s.bandSizes == null) {
-    return;
-  }
-  if (s.bandSizes.size() == 0) {
-    return;
-  }
-  float maxBP = 0;
-
-  for (int b : s.bandSizes) {
-    if (b > maxBP) maxBP = b;
-  }
-
-  if (maxBP <= 0) {
-    return;
-  }
-  
-  fill(10, 20, 80);
-  noStroke();
-
-  for (int size : s.bandSizes) {
-
-    float y = map(size, 0, maxBP, 65 + 400 - 10, 65 + 10);
-
-    rect(laneX - 18, y - 2, 36, 5);
-  }
-}
-
-void drawGelPad() {
-
-  background(210);
-  fill(235);
-  stroke(90);
-  rect(220, 65, 560, 400);
-
-  float[] sampleLaneX = new float[3];
-
-  for (int i = 0; i < 3; i++) {
-    sampleLaneX[i] = 290 + 140 * (i + 1);
-  }
-
-  // lane dividers
-  stroke(140);
-  for (int i = 1; i < 4; i++) {
-    float x = 220 + 140 * i;
-    line(x, 65, x, 465);
-  }
-
-  // labels
-  fill(0);
-  textAlign(CENTER);
-  textSize(14);
-
-  if (caseKitten != null) {
-    text(caseKitten.name, 290, 65 - 15);
-  }
-
-  for (int i = 0; i < samples.size() && i < 3; i++) {
-    if (samples.get(i).cat != null) {
-      text(samples.get(i).cat.name, sampleLaneX[i], 65 - 15);
-    }
-  }
-
-  // bp ladder
-  int[] bp = {800,700,600,500,400,300,200,100};
-
-  textAlign(RIGHT);
-  textSize(10);
-
-  for (int b : bp) {
-
-    // 800 at top, 100 at bottom
-    float y = map(b, 800, 100, 100, 430);
-
-    fill(0);
-    text(b, 220 - 8, y);
-
-    stroke(170);
-    line(220, y, 220 + 560, y);
-  }
-
-  if (caseKitten != null) {
-    drawKittenBands(290, 100, 430 - 100);
-  }
-
-  for (int i = 0; i < samples.size() && i < 3; i++) {
-    drawSampleBands(samples.get(i), sampleLaneX[i], 100, 430 - 100);
-  }
-  
-  fill(100, 200, 255);
-  rect(0, 500, 1000, 800);
-  fill(0);
-  textSize(20);
-  text("Who is " + caseKitten.name + "'s father?", 250, 550);
-}
-
-void drawEnzymeScreen() {
-
-  float startX = 50;
-  float startY = 100;
-
-  animationStep = (millis() - animationStartTime) / 5000 + 1;
-  
-  if (animationStep > 5) {
-    animationStep = 5;
-  }
-  
-  fill(255);
-  textAlign(CENTER);
-  textSize(26);
-
-  String stepDescription = "";
-
-  if (animationStep == 1) {
-    stepDescription = "Step 1: DNA Sample Loaded";
-  }
-  else if (animationStep == 2) {
-    stepDescription = "Step 2: Enzyme " + enzyme.name + " binds " + enzyme.recognitionSite;
-  }
-  else if (animationStep == 3) {
-  stepDescription = "Step 3: DNA Cut";
-  }
-  else if (animationStep == 4) {
-  stepDescription = "Step 4: Fragments Formed";
-  }
-  else {
-  stepDescription = "Step 5: Ready for Gel";
-  }
-
-  text(stepDescription, width/2, 40);
-
-  for (int i = 0; i < samples.size(); i++) {
-
-    Sample s = samples.get(i);
-
-    if (s == null || s.cat == null) {
-      continue;
-    }
-    
-    float y = startY + i * 140;
-
-    fill(0);
-    textAlign(LEFT);
-    textSize(16);
-
-    text(s.cat.name, startX, y - 20);
-
-    s.drawDNA(startX, y);
-
-    if (animationStep >= 3) {
-      s.drawCutSites(startX, y + 30);
-    }
-    if (animationStep >= 4) {
-      s.drawFragments(startX, y + 60);
-    }
-    if (animationStep >= 5) {
-      s.drawFragmentLabels(startX, y + 90);
-    }
-  }
-}
-
+// draw the screen where the user can collect samples
 void loadSampleScreen() {
-  textAlign(LEFT); 
-  int cols = Math.min(cats.size(), 6); 
-  int spacing = 15;
-  int iconSize = 75;
-  int rows = ceil((float)cats.size() / cols);
-  int boxWidth = cols * iconSize + (cols + 1) * spacing;
-  int boxHeight = rows * (iconSize + 40) + (rows + 1) * spacing;
-  
   // background panels
   fill(220); 
   noStroke();
-  rect(10, 50, boxWidth, boxHeight);
-  rect(boxWidth + 25, 50, 400, boxHeight);
+  rect(10, 50, 555, 280);
+  rect(555 + 25, 50, 400, 280);
 
   // title
+  textAlign(LEFT); 
   fill(0);
   textSize(24);
-  text("Select a Cat to Sample", 10, 30);
+  
+  // draw title
+  text("Select and Drag a Cat to Sample", 10, 30);
 
-  // draw cat grid
+  // draw cat grid by drawing each cat icon individually
   for (int i = 0; i < cats.size(); i++) {
-    int row = i / cols;
-    int col = i % cols;
-    int x = 10 + spacing + col * (iconSize + spacing); 
-    int y = 50 + spacing + row * (iconSize + 40 + spacing);
-
+    // calculate spacing using the row and column
+    int row = i / 6;
+    int col = i % 6;
+    int x = 25 + col * 90; 
+    int y = 65 + row * 155;
+    
+    // get the current cat and draw its picture at the calculated grid position
     Cat c = cats.get(i);
     if (c.img != null) {
       imageMode(CORNER);
-      image(c.img, x, y, iconSize, iconSize);
+      image(c.img, x, y, 75, 75);
     }
 
+    // write the cat's name under it's picture
     fill(0);
     textSize(14);
     textAlign(CENTER);
     text(c.name, x + 37, y + 95);
   }
   
+  // draw each sample
   for (int i = 0; i < samples.size(); i++) {
     samples.get(i).drawRack();  
   }
@@ -258,4 +64,147 @@ void loadSampleScreen() {
   if (draggedCat != null) {
     image(draggedCat.img, dragX - 37, dragY - 37, 75, 75);
   }
+}
+
+// function to draw the enzyme restriction visualization screen
+void drawEnzymeScreen() {
+  float startX = 50;
+  float startY = 100;
+
+  String stepDescription = "";
+
+  // this screen uses animation, with each "stage" occuring every 5 seconds (5000 milliseconds)
+  animationStep = (millis() - animationStartTime) / 5000 + 1;
+  
+  // once the time progresses past the 4th animation step, show the animation for step 4
+  if (animationStep > 4) {
+    animationStep = 4;
+  }
+  
+  fill(255);
+  textAlign(CENTER);
+  textSize(26);
+
+  // based on the animation step, the description title will be different.
+  if (animationStep == 1) {
+    stepDescription = "Step 1: DNA Sample Loaded";
+  }
+  else if (animationStep == 2) {
+    stepDescription = "Step 2: Enzyme " + enzyme.name + " binds " + enzyme.recognitionSite;
+  }
+  else if (animationStep == 3) {
+    stepDescription = "Step 3: DNA Cut";
+  }
+  else {
+    stepDescription = "Step 4: Fragments Formed and Ready for Gel";
+  }
+
+  // draw the title in the centre of the screen (horisontally)
+  text(stepDescription, width/2, 40);
+
+  // visualize each sample
+  for (int i = 0; i < samples.size(); i++) {
+    Sample s = samples.get(i);
+    
+    //calculate the vertical row position in order to stack the bands on top of each other
+    float y = startY + i * 140;
+
+    fill(0);
+    textAlign(LEFT);
+    textSize(16);
+
+    // label each sample
+    text(s.cat.name, startX, y - 20);
+
+    // for the first step, draw the full DNA sequence
+    s.drawDNA(startX, y);
+
+    // for the second step, draw the DNA sequence with the enzyme restriction cuts
+    if (animationStep >= 3) {
+      s.drawCutSites(startX, y + 30);
+    }
+    
+    // for the last step, label the DNA fragments
+    if (animationStep >= 4) {
+      s.drawFragmentLabels(startX, y + 65);
+    }
+  }
+}
+
+// draw the gel on the evaluation screen
+void drawGelPad() {
+  background(210);
+  fill(235);
+  stroke(90);
+  
+  //background of the gel
+  rect(220, 65, 560, 400);
+
+  // set up a temporary array to store the horizontal ladder midpoints for the three samples
+  float[] sampleLaneX = new float[3];
+
+  // populate the array by calculating the exact spacing for each column
+  for (int i = 0; i < 3; i++) {
+    sampleLaneX[i] = 290 + 140 * (i + 1);
+  }
+
+  // lane dividers/boundaries
+  stroke(140);
+  for (int i = 1; i < 4; i++) {
+    float x = 220 + 140 * i;
+    
+    line(x, 65, x, 465);
+  }
+  
+  fill(0);
+  textAlign(CENTER);
+  textSize(14);
+
+  // label case kitten name above column
+  text(caseKitten.name, 290, 50);
+
+  // label each sample using the cat name
+  for (int i = 0; i < samples.size() && i < 3; i++) {
+    if (samples.get(i).cat != null) {
+      text(samples.get(i).cat.name, sampleLaneX[i], 50);
+    }
+  }
+
+  // vertical scale of the bp ladder; I will be using a 100 bp ladder.
+  int[] bp = {100, 75, 50, 25, 0};
+
+  textAlign(RIGHT);
+  textSize(10);
+
+  // for each bp index
+  for (int b : bp) {
+
+    // 100 at top, 0 at bottom, calculating the vertical step spacing between indices
+    float y = map(b, 100, 0, 100, 430);
+
+    // draw the index label
+    fill(0);
+    text(b, 212, y);
+
+    // draw horizontal gridlines
+    stroke(170);
+    line(220, y, 220 + 560, y);
+  }
+  
+  // drawkitten DNA bands on the first ladder lane
+  drawKittenBands(290);
+
+  // draw the sample bands on their rspective lanes
+  for (int i = 0; i < samples.size() && i < 3; i++) {
+    drawSampleBands(samples.get(i), sampleLaneX[i]);
+  }
+  
+  // background for selection checkboxes
+  fill(100, 200, 255);
+  rect(0, 500, 1000, 800);
+  fill(0);
+  textSize(20);
+  
+  // draw text
+  text("Who is " + caseKitten.name + "'s father?", 250, 550);
 }

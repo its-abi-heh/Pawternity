@@ -1,4 +1,6 @@
+// Sample class
 class Sample {
+  // FIELDS
   ArrayList<Integer> cutSites;
   ArrayList<String> fragments;
   ArrayList<Integer> bandSizes;
@@ -14,6 +16,7 @@ class Sample {
 
   Cat cat;
 
+  // CONSTRUCTOR
   Sample(float x, float y) {
     filled = false;
     x_pos = x;
@@ -24,136 +27,99 @@ class Sample {
     fragments = new ArrayList<String>();
     bandSizes = new ArrayList<Integer>();
   }
-
+  // METHODS
+  
+  // method to draw the sample depending on it's state.
   void drawRack() {
     if (this.filled == false) {
+      // only the rack
       rackImg = loadImage("holder_1.png"); 
     }
     else {
+      // test tube on a rack
       rackImg = loadImage("holder_2.png");      
     }
     
+    // draw the image
     image(rackImg, this.x_pos, this.y_pos, 175, 250);     
   }
 
-
-  // first draw full DNA sequence
+  // method for animation step #1
   void drawDNA(float x, float y) {
-    if (dnaSequence == null) {
-      return;
-    }
-    
     fill(255);
     textAlign(LEFT);
+    
+    // draw the full DNA sequence on screen
     text(dnaSequence, x, y);
+
   }
 
-  // show red lines between cut fragments
+  // method for animation step #3
   void drawCutSites(float x, float y) {
-    if (dnaSequence == null) {
-      return;
-    }
-    
     fill(255);
     textAlign(LEFT);
     noStroke();
 
     float currentX = x;
-    float cutGapping = 40;
-
+    
+    // for each DNA base
     for (int i = 0; i < dnaSequence.length(); i++) {
-      // Check if a restriction cut occurs
+     
+      // check if a restriction cut occurs at the current DNA base
       if (cutSites.contains(i) && i > 0) {
         
-        // Draw the red vertical line centered at a cut
+        // draw a red vertical line to show a cut made by the restriction enzyme
+        float lineX = currentX + 20;
+
         stroke(255, 0, 0);
         strokeWeight(3);
-        float lineX = currentX + (cutGapping / 2);
-        line(lineX, y - 15, lineX, y + 5);
+        line(currentX + 20, y - 15, lineX, y + 5);
         noStroke();
         
-        currentX += cutGapping;
+        // the x position of the base increments by the spacing between the cut line
+        currentX += 40;
       }
 
-      // draw the base
+      // Use charAt to get the individual character letter at index i and convert it to a string
       String base = String.valueOf(dnaSequence.charAt(i));
       
+      // draw the base on screen
       text(base, currentX, y);
+      
+      // increment x again by the width of the character
       currentX += textWidth(base); 
     }
+    
     strokeWeight(1);
   }
 
-  void drawFragments(float x, float y) {
-
-    if (dnaSequence == null){
-      return;
-    }
-    
-    float currentX = x;
-    float cutGap = 40;
-  
-    ArrayList<Integer> allCuts = new ArrayList<Integer>();
-    allCuts.add(0);
-  
-    for (int c : cutSites) {
-      allCuts.add(c);
-    }
-  
-    allCuts.add(dnaSequence.length());
-  
-    for (int i = 0; i < allCuts.size() - 1; i++) {
-  
-      int start = allCuts.get(i);
-      int end = allCuts.get(i + 1);
-  
-      float segmentWidth = 0;
-  
-      for (int j = start; j < end; j++) {
-        segmentWidth += textWidth("" + dnaSequence.charAt(j));
-      }
-  
-      fill(100, 200, 255);
-      noStroke();
-      rect(currentX, y - 15, segmentWidth, 25);
-  
-      fill(0);
-      textAlign(LEFT);
-  
-      float tx = currentX;
-  
-      for (int j = start; j < end; j++) {
-        String base = "" + dnaSequence.charAt(j);
-        text(base, tx, y);
-        tx += textWidth(base);
-      }
-  
-      currentX += segmentWidth + cutGap;
-    }
-  }
-
-  // label fragments
-  void drawFragmentLabels(float x, float y) {
-    if (fragments == null || fragments.isEmpty()) return;
-
-    fill(0);
+  // method for animation step #4
+  void drawFragmentLabels(float x, float y) {  
+    fill(0, 0, 230);  
     textAlign(LEFT);
     noStroke();
-
+  
     float currentX = x;
-    float fragmentSpacing = 50;
 
+    // run through all the fragments
     for (int i = 0; i < fragments.size(); i++) {
-      String frag = fragments.get(i);
+      
+      // label the fragment using its index
       String label = "Frag " + (i + 1);
       
+      // draw the text label
       text(label, currentX, y);
-      currentX += textWidth(frag) + fragmentSpacing;
+  
+      // set the x position of the next label
+      currentX += textWidth(fragments.get(i)) + 50;
     }
   }
-    
-  void generateBands(Enzyme enzyme) {
   
+  // this function populates the band sizes integer array list (fragments) using an enzyme
+  void generateBands(Enzyme enzyme) {
     bandSizes = enzyme.getFragments(dnaSequence);
+    
+    // populate the fragments array list so the results don't pull blank/0 data
+    fragments = enzyme.digest(dnaSequence);
   }
 }
